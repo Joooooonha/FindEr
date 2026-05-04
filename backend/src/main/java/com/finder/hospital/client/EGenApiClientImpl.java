@@ -20,7 +20,8 @@ import java.util.Optional;
 public class EGenApiClientImpl implements EGenApiClient {
 
     private static final Logger log = LoggerFactory.getLogger(EGenApiClientImpl.class);
-    private static final String LIST_PATH = "/getEgytListInfoInqire";
+    private static final String LOCATION_PATH = "/getEgytLcinfoInqire";
+    private static final String DETAIL_PATH   = "/getEgytBassInfoInqire";
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
@@ -33,7 +34,7 @@ public class EGenApiClientImpl implements EGenApiClient {
 
     @Override
     public List<EGenItem> getHospitalsByLocation(double lat, double lng, int numOfRows) {
-        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + LIST_PATH)
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + LOCATION_PATH)
                 .queryParam("serviceKey", apiKey)
                 .queryParam("WGS84_LAT", lat)
                 .queryParam("WGS84_LON", lng)
@@ -48,7 +49,7 @@ public class EGenApiClientImpl implements EGenApiClient {
 
     @Override
     public Optional<EGenItem> getHospitalById(String hpid) {
-        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + LIST_PATH)
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + DETAIL_PATH)
                 .queryParam("serviceKey", apiKey)
                 .queryParam("HPID", hpid)
                 .queryParam("pageNo", 1)
