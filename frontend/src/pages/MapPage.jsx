@@ -33,14 +33,14 @@ export default function MapPage() {
 
   if (!userLocation) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: '#6b7280', fontSize: '14px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#6b7280', fontSize: '14px' }}>
         위치 정보를 불러오는 중...
       </div>
     )
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh' }}>
+    <div style={{ display: 'flex', height: '100%' }}>
       <HospitalPanel
         hospitals={hospitals}
         loading={loading}
