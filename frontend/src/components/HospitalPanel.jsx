@@ -5,17 +5,16 @@ export default function HospitalPanel({ hospitals, loading, radius, onRadiusChan
     <div style={{
       width: '340px',
       minWidth: '340px',
-      height: '100vh',
+      height: '100%',
       display: 'flex',
       flexDirection: 'column',
       background: '#fff',
       boxShadow: '2px 0 8px rgba(0,0,0,0.08)',
       zIndex: 10,
     }}>
-      {/* 헤더 */}
-      <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid #e5e7eb' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#111827', letterSpacing: '-0.5px' }}>FindEr</h1>
-        <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '2px' }}>내 주변 응급실 찾기</p>
+      {/* 패널 타이틀 */}
+      <div style={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>
+        <p style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>내 주변 응급실</p>
       </div>
 
       {/* 반경 선택 */}

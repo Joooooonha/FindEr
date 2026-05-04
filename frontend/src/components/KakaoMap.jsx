@@ -60,5 +60,5 @@ export default function KakaoMap({ userLocation, hospitals, selectedHospital, on
     mapRef.current.panTo(new window.kakao.maps.LatLng(selectedHospital.lat, selectedHospital.lng))
   }, [selectedHospital])
 
-  return <div ref={containerRef} style={{ flex: 1, height: '100vh' }} />
+  return <div ref={containerRef} style={{ flex: 1, height: '100%' }} />
 }
