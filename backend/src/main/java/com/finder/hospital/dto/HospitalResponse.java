@@ -1,5 +1,6 @@
 package com.finder.hospital.dto;
 
+import com.finder.hospital.domain.BedSnapshot;
 import com.finder.hospital.domain.Hospital;
 import com.finder.hospital.domain.HospitalStatus;
 
@@ -15,16 +16,19 @@ public record HospitalResponse(
         double lat,
         double lng
 ) {
-    public static HospitalResponse of(Hospital hospital, double distance) {
+    public static HospitalResponse of(Hospital hospital, double distance, BedSnapshot bed, int staleThresholdMinutes) {
+        HospitalStatus status = bed != null ? bed.toStatus(staleThresholdMinutes) : HospitalStatus.UNKNOWN;
+        Integer beds = bed != null ? bed.availableEmergencyBeds() : null;
+        String updatedAt = bed != null && bed.updatedAt() != null ? bed.updatedAt().toString() : null;
         return new HospitalResponse(
                 hospital.getId(),
                 hospital.getName(),
                 hospital.getAddress(),
                 hospital.getPhone(),
                 Math.round(distance * 10.0) / 10.0,
-                HospitalStatus.UNKNOWN,
-                null,
-                null,
+                status,
+                beds,
+                updatedAt,
                 hospital.getLat(),
                 hospital.getLng()
         );
