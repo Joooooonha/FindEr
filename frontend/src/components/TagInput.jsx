@@ -11,15 +11,21 @@ export default function TagInput({ label, tags, onChange, placeholder }) {
     setDraft('')
   }
 
-  const removeTag = (idx) => onChange(tags.filter((_, i) => i !== idx))
+  const removeTag = (target) => onChange(tags.filter(t => t !== target))
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' || e.key === ',') {
       e.preventDefault()
       addTag()
     } else if (e.key === 'Backspace' && !draft && tags.length > 0) {
-      removeTag(tags.length - 1)
+      onChange(tags.slice(0, -1))
     }
+  }
+
+  // × 버튼 클릭 시 발생하는 blur 이벤트가 addTag를 호출해 의도치 않은 추가가 일어나지 않도록 필터링.
+  const handleBlur = (e) => {
+    if (e.relatedTarget?.dataset?.removeTag) return
+    addTag()
   }
 
   return (
@@ -37,8 +43,8 @@ export default function TagInput({ label, tags, onChange, placeholder }) {
         background: '#fff',
         minHeight: '40px',
       }}>
-        {tags.map((tag, idx) => (
-          <span key={idx} style={{
+        {tags.map(tag => (
+          <span key={tag} style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: '4px',
@@ -51,7 +57,8 @@ export default function TagInput({ label, tags, onChange, placeholder }) {
             {tag}
             <button
               type="button"
-              onClick={() => removeTag(idx)}
+              data-remove-tag="true"
+              onClick={() => removeTag(tag)}
               style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#1e40af', fontSize: '14px', lineHeight: 1, padding: 0 }}
               aria-label="삭제"
             >
@@ -64,7 +71,7 @@ export default function TagInput({ label, tags, onChange, placeholder }) {
           value={draft}
           onChange={e => setDraft(e.target.value)}
           onKeyDown={handleKeyDown}
-          onBlur={addTag}
+          onBlur={handleBlur}
           placeholder={tags.length === 0 ? placeholder : ''}
           style={{ flex: 1, minWidth: '100px', border: 'none', outline: 'none', fontSize: '13px' }}
         />

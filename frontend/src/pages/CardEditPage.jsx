@@ -15,6 +15,8 @@ export default function CardEditPage() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    setLoading(true)
+    setError(null)
     fetchCard(token)
       .then(setCard)
       .catch(err => setError(err.message))
@@ -23,8 +25,8 @@ export default function CardEditPage() {
 
   const handleVerify = (e) => {
     e.preventDefault()
-    if (pin.length < 4 || pin.length > 8) {
-      alert('PIN은 4~8자입니다'); return
+    if (!/^\d{4,8}$/.test(pin)) {
+      alert('PIN은 4~8자리 숫자입니다'); return
     }
     setPinVerified(true)
   }
@@ -46,7 +48,6 @@ export default function CardEditPage() {
     try {
       await deleteCard(token, pin)
       clearMyCardToken()
-      alert('카드가 삭제되었습니다.')
       navigate('/', { replace: true })
     } catch (err) {
       alert(err.message || '삭제 실패')
@@ -69,9 +70,11 @@ export default function CardEditPage() {
             type="password"
             value={pin}
             onChange={e => setPin(e.target.value)}
+            inputMode="numeric"
+            pattern="\d{4,8}"
             minLength={4}
             maxLength={8}
-            placeholder="4~8자"
+            placeholder="4~8자리 숫자"
             autoFocus
             style={{
               width: '100%',
@@ -110,7 +113,7 @@ export default function CardEditPage() {
   return (
     <div style={{ maxWidth: '560px', margin: '0 auto', padding: '24px 16px', overflowY: 'auto', height: '100%' }}>
       <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', marginBottom: '20px' }}>응급카드 수정</h1>
-      <CardForm initial={card} onSubmit={handleUpdate} submitLabel="수정 저장" submitting={submitting} />
+      <CardForm key={token} initial={card} onSubmit={handleUpdate} submitLabel="수정 저장" submitting={submitting} />
 
       <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
         <button

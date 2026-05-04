@@ -99,7 +99,7 @@ export default function CardViewPage() {
           QR 코드를 스캔하면 이 카드를 볼 수 있습니다
         </p>
         <div style={{ display: 'inline-block', padding: '12px', background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
-          <QRCodeSVG value={shareUrl} size={160} level="M" />
+          <QRCodeSVG value={shareUrl} size={160} level="M" title="응급카드 공유 QR 코드" />
         </div>
         <p style={{ fontSize: '11px', color: '#9ca3af', marginTop: '12px', wordBreak: 'break-all' }}>{shareUrl}</p>
       </div>

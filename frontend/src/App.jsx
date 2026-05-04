@@ -4,6 +4,7 @@ import MapPage from './pages/MapPage'
 import CardCreatePage from './pages/CardCreatePage'
 import CardViewPage from './pages/CardViewPage'
 import CardEditPage from './pages/CardEditPage'
+import NotFoundPage from './pages/NotFoundPage'
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
             <Route path="/cards/new" element={<CardCreatePage />} />
             <Route path="/cards/:token" element={<CardViewPage />} />
             <Route path="/cards/:token/edit" element={<CardEditPage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>
       </div>

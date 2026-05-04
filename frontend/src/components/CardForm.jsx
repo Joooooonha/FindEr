@@ -45,8 +45,8 @@ export default function CardForm({ initial, onSubmit, submitLabel, requirePin = 
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!form.name.trim()) { alert('이름을 입력해주세요'); return }
-    if (requirePin && (form.pin.length < 4 || form.pin.length > 8)) {
-      alert('PIN은 4~8자로 입력해주세요'); return
+    if (requirePin && !/^\d{4,8}$/.test(form.pin)) {
+      alert('PIN은 4~8자리 숫자만 입력해주세요'); return
     }
     onSubmit({
       name: form.name.trim(),
@@ -118,10 +118,12 @@ export default function CardForm({ initial, onSubmit, submitLabel, requirePin = 
             value={form.pin}
             onChange={update('pin')}
             style={inputStyle}
+            inputMode="numeric"
+            pattern="\d{4,8}"
             minLength={4}
             maxLength={8}
             required
-            placeholder="4~8자 (수정·삭제 시 필요)"
+            placeholder="4~8자리 숫자"
           />
           <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '4px' }}>
             PIN을 잃어버리면 카드 수정·삭제가 불가합니다

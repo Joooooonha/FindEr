@@ -23,6 +23,14 @@ export default function KakaoMap({ userLocation, hospitals, selectedHospital, on
 
     // 내 위치 마커
     userMarkerRef.current = new kakao.maps.Marker({ position: center, map: mapRef.current })
+
+    return () => {
+      overlaysRef.current.forEach(o => o.setMap(null))
+      overlaysRef.current = []
+      userMarkerRef.current?.setMap(null)
+      userMarkerRef.current = null
+      mapRef.current = null
+    }
   }, [userLocation])
 
   // 병원 마커 업데이트
