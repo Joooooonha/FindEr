@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.Comparator;
 import java.util.List;
 
-/** 응급실 조회 유스케이스. 위치 기반 기관 정보 + 실시간 병상 캐시 결합. */
+/** 응급실 조회 유스케이스. 위치 기반 기관 정보 + 실시간 병상 + 차단메시지 결합. */
 @Service
 @RequiredArgsConstructor
 public class HospitalService {
@@ -22,6 +22,7 @@ public class HospitalService {
 
     private final EGenApiClient eGenApiClient;
     private final BedInfoCache bedInfoCache;
+    private final BlockMessageCache blockMessageCache;
 
     @Value("${bed.api.stale-threshold-minutes}")
     private int staleThresholdMinutes;
@@ -37,7 +38,8 @@ public class HospitalService {
                         h,
                         h.distanceTo(lat, lng),
                         bedInfoCache.find(h.getId()).orElse(null),
-                        staleThresholdMinutes))
+                        staleThresholdMinutes,
+                        blockMessageCache.findActive(h.getId())))
                 .toList();
 
         return new HospitalListResponse(hospitals);
@@ -50,7 +52,8 @@ public class HospitalService {
                 .map(h -> HospitalDetailResponse.from(
                         h,
                         bedInfoCache.find(h.getId()).orElse(null),
-                        staleThresholdMinutes))
+                        staleThresholdMinutes,
+                        blockMessageCache.findActive(h.getId())))
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 병원입니다."));
     }
 }

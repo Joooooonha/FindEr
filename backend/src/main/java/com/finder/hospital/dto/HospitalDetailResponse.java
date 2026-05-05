@@ -1,8 +1,11 @@
 package com.finder.hospital.dto;
 
 import com.finder.hospital.domain.BedSnapshot;
+import com.finder.hospital.domain.BlockMessage;
 import com.finder.hospital.domain.Hospital;
 import com.finder.hospital.domain.HospitalStatus;
+
+import java.util.List;
 
 public record HospitalDetailResponse(
         String id,
@@ -16,12 +19,21 @@ public record HospitalDetailResponse(
         boolean mriAvailable,
         String updatedAt,
         double lat,
-        double lng
+        double lng,
+        List<BlockMessageResponse> blockMessages
 ) {
-    public static HospitalDetailResponse from(Hospital hospital, BedSnapshot bed, int staleThresholdMinutes) {
+    public static HospitalDetailResponse from(
+            Hospital hospital,
+            BedSnapshot bed,
+            int staleThresholdMinutes,
+            List<BlockMessage> activeBlockMessages
+    ) {
         HospitalStatus status = bed != null ? bed.toStatus(staleThresholdMinutes) : HospitalStatus.UNKNOWN;
         Integer beds = bed != null ? bed.availableEmergencyBeds() : null;
         String updatedAt = bed != null && bed.updatedAt() != null ? bed.updatedAt().toString() : null;
+        List<BlockMessageResponse> messages = activeBlockMessages.stream()
+                .map(BlockMessageResponse::from)
+                .toList();
         return new HospitalDetailResponse(
                 hospital.getId(),
                 hospital.getName(),
@@ -34,7 +46,8 @@ public record HospitalDetailResponse(
                 hospital.isMriAvailable(),
                 updatedAt,
                 hospital.getLat(),
-                hospital.getLng()
+                hospital.getLng(),
+                messages
         );
     }
 }
