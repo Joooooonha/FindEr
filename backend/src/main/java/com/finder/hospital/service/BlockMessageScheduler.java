@@ -6,8 +6,6 @@ import com.finder.hospital.domain.BlockMessage;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** 차단메시지 주기적 폴링 스케줄러. */
+/** 차단메시지 주기적 폴링 스케줄러. fixedDelay는 첫 실행을 즉시 트리거한다. */
 @Component
 @RequiredArgsConstructor
 public class BlockMessageScheduler {
@@ -26,15 +24,14 @@ public class BlockMessageScheduler {
     private final BlockMessageClient blockMessageClient;
     private final BlockMessageCache cache;
 
-    @EventListener(ApplicationReadyEvent.class)
-    public void warmUp() {
-        refresh();
-    }
-
-    /** 5분 주기로 갱신. 차단 메시지는 실시간 병상보다 변경 빈도가 낮음. */
+    /** 차단메시지는 변경 빈도 낮음. fixedDelay 만료 시마다 재조회. */
     @Scheduled(fixedDelayString = "${block.message.refresh-interval-ms}")
     public void refresh() {
         List<BlockMessageItem> items = blockMessageClient.getAllMessages();
+        if (items.isEmpty()) {
+            log.warn("차단메시지 갱신 실패 또는 응답 비어있음. 기존 캐시 유지");
+            return;
+        }
 
         Map<String, List<BlockMessage>> grouped = new HashMap<>();
         for (BlockMessageItem item : items) {

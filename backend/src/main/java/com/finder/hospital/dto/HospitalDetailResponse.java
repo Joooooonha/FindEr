@@ -31,9 +31,6 @@ public record HospitalDetailResponse(
         HospitalStatus status = bed != null ? bed.toStatus(staleThresholdMinutes) : HospitalStatus.UNKNOWN;
         Integer beds = bed != null ? bed.availableEmergencyBeds() : null;
         String updatedAt = bed != null && bed.updatedAt() != null ? bed.updatedAt().toString() : null;
-        List<BlockMessageResponse> messages = activeBlockMessages.stream()
-                .map(BlockMessageResponse::from)
-                .toList();
         return new HospitalDetailResponse(
                 hospital.getId(),
                 hospital.getName(),
@@ -47,7 +44,7 @@ public record HospitalDetailResponse(
                 updatedAt,
                 hospital.getLat(),
                 hospital.getLng(),
-                messages
+                BlockMessageResponse.fromList(activeBlockMessages)
         );
     }
 }
