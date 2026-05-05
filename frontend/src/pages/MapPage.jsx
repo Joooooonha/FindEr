@@ -24,9 +24,10 @@ export default function MapPage() {
     )
   }, [])
 
-  // 위치/반경 변경 시 병원 조회
+  // 위치/반경 변경 시 병원 조회. 새 목록에 없는 병원이 선택 상태로 남지 않도록 초기화.
   useEffect(() => {
     if (!userLocation) return
+    setSelectedHospital(null)
     setLoading(true)
     fetchHospitals(userLocation.lat, userLocation.lng, radius)
       .then(data => setHospitals(data.hospitals || []))

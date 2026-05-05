@@ -17,11 +17,16 @@ export default function LocationSearch({ onLocate, isCustom, onResetToGps }) {
     setSearching(true)
     setError(null)
 
+    const Status = window.kakao.maps.services.Status
     const places = new window.kakao.maps.services.Places()
     places.keywordSearch(keyword, (results, status) => {
       setSearching(false)
-      if (status !== window.kakao.maps.services.Status.OK || !results.length) {
+      if (status === Status.ZERO_RESULT || !results.length) {
         setError('검색 결과가 없습니다')
+        return
+      }
+      if (status !== Status.OK) {
+        setError('검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요')
         return
       }
       const top = results[0]
