@@ -180,8 +180,20 @@ chore: GitHub Actions Node.js 버전 업데이트
 
 ## 외부 API
 
-- **E-Gen 실시간 가용병상**: API 키 승인 대기 중. 현재 `UNKNOWN` 상태로 Mock 응답.
+- **E-Gen 응급의료기관 정보** (`getEgytLcinfoInqire`): 위치 기반 병원 목록 조회. 매 요청 호출.
+- **safetydata.go.kr 실시간 병상정보** (`DSSP-IF-00242`): 전국 425개 병원 병상 데이터. 3분 주기로 메모리 캐시 갱신, 사용자 요청 시 캐시 룩업.
 - **Kakao Maps**: 프론트엔드에서 직접 호출.
+
+---
+
+## 데이터 표시 정책
+
+응급의료 데이터는 신뢰도가 사용자 의사결정에 직결되므로 다음 규칙을 따른다.
+
+- **가용 병상 수 직접 노출**: `availableBeds` 필드를 카드 UI에 숫자로 표시한다. (예: "병상 6개")
+- **갱신 시각 함께 표시**: `updatedAt`을 상대 시간 형식으로 같이 노출한다. (예: "5분 전 갱신")
+- **UNKNOWN 처리**: 백엔드에서 `availableEmergencyBeds`가 음수이거나 갱신이 30분 초과한 경우 status를 UNKNOWN으로 산출한다. UI에서는 UNKNOWN 상태일 때 병상 수 숫자를 숨기고 "정보 없음"으로 표시한다.
+- **상태 카테고리**: GREEN(여유, ≥4) / YELLOW(보통, 1~3) / RED(혼잡, 0) / UNKNOWN(정보 없음). 색상 마커와 배지에 사용.
 
 ---
 
