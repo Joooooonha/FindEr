@@ -1,6 +1,14 @@
 import StatusBadge from './StatusBadge'
 
+/** 카카오맵 길찾기 URL 생성. 한글 이름 안전을 위해 encodeURIComponent 처리. */
+function buildKakaoDirectionsUrl(hospital) {
+  const name = encodeURIComponent(hospital.name)
+  return `https://map.kakao.com/link/to/${name},${hospital.lat},${hospital.lng}`
+}
+
 export default function HospitalItem({ hospital, isSelected, onClick }) {
+  const hasCoords = Number.isFinite(hospital.lat) && Number.isFinite(hospital.lng)
+
   return (
     <div
       onClick={onClick}
@@ -24,15 +32,29 @@ export default function HospitalItem({ hospital, isSelected, onClick }) {
         </div>
         <StatusBadge status={hospital.status} />
       </div>
-      {hospital.phone && (
-        <a
-          href={`tel:${hospital.phone}`}
-          onClick={e => e.stopPropagation()}
-          style={{ display: 'inline-block', marginTop: '8px', fontSize: '12px', color: '#3b82f6', textDecoration: 'none' }}
-        >
-          {hospital.phone}
-        </a>
-      )}
+
+      <div style={{ display: 'flex', gap: '12px', marginTop: '8px', alignItems: 'center' }}>
+        {hospital.phone && (
+          <a
+            href={`tel:${hospital.phone}`}
+            onClick={e => e.stopPropagation()}
+            style={{ fontSize: '12px', color: '#3b82f6', textDecoration: 'none' }}
+          >
+            📞 {hospital.phone}
+          </a>
+        )}
+        {hasCoords && (
+          <a
+            href={buildKakaoDirectionsUrl(hospital)}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={e => e.stopPropagation()}
+            style={{ fontSize: '12px', color: '#3b82f6', textDecoration: 'none' }}
+          >
+            🧭 길찾기
+          </a>
+        )}
+      </div>
     </div>
   )
 }
