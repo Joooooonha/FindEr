@@ -6,24 +6,28 @@ import { fetchHospitals } from '../api/hospital'
 const DEFAULT_LOCATION = { lat: 37.5665, lng: 126.9780 } // 서울 시청
 
 export default function MapPage() {
-  const [userLocation, setUserLocation] = useState(null)
+  const [gpsLocation, setGpsLocation] = useState(null)
+  const [customLocation, setCustomLocation] = useState(null)
   const [hospitals, setHospitals] = useState([])
   const [radius, setRadius] = useState(5)
   const [selectedHospital, setSelectedHospital] = useState(null)
   const [loading, setLoading] = useState(false)
 
-  // 내 위치 가져오기
+  const userLocation = customLocation ?? gpsLocation
+
+  // GPS 기반 내 위치 가져오기
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
-      pos => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => setUserLocation(DEFAULT_LOCATION),
+      pos => setGpsLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => setGpsLocation(DEFAULT_LOCATION),
       { timeout: 5000 }
     )
   }, [])
 
-  // 위치/반경 변경 시 병원 조회
+  // 위치/반경 변경 시 병원 조회. 새 목록에 없는 병원이 선택 상태로 남지 않도록 초기화.
   useEffect(() => {
     if (!userLocation) return
+    setSelectedHospital(null)
     setLoading(true)
     fetchHospitals(userLocation.lat, userLocation.lng, radius)
       .then(data => setHospitals(data.hospitals || []))
@@ -48,6 +52,10 @@ export default function MapPage() {
         onRadiusChange={setRadius}
         selectedHospital={selectedHospital}
         onSelect={setSelectedHospital}
+        onLocate={setCustomLocation}
+        isCustom={Boolean(customLocation)}
+        customLabel={customLocation?.label}
+        onResetToGps={() => setCustomLocation(null)}
       />
       <KakaoMap
         userLocation={userLocation}
