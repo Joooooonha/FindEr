@@ -1,6 +1,18 @@
 import HospitalItem from './HospitalItem'
+import LocationSearch from './LocationSearch'
 
-export default function HospitalPanel({ hospitals, loading, radius, onRadiusChange, selectedHospital, onSelect }) {
+export default function HospitalPanel({
+  hospitals,
+  loading,
+  radius,
+  onRadiusChange,
+  selectedHospital,
+  onSelect,
+  onLocate,
+  isCustom,
+  customLabel,
+  onResetToGps,
+}) {
   return (
     <div style={{
       width: '340px',
@@ -15,7 +27,13 @@ export default function HospitalPanel({ hospitals, loading, radius, onRadiusChan
       {/* 패널 타이틀 */}
       <div style={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>
         <p style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>내 주변 응급실</p>
+        {isCustom && customLabel && (
+          <p style={{ fontSize: '12px', color: '#3b82f6', marginTop: '2px' }}>📍 {customLabel} 기준</p>
+        )}
       </div>
+
+      {/* 위치 검색 */}
+      <LocationSearch onLocate={onLocate} isCustom={isCustom} onResetToGps={onResetToGps} />
 
       {/* 반경 선택 */}
       <div style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb' }}>

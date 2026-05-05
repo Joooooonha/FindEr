@@ -13,15 +13,13 @@ export default function KakaoMap({ userLocation, hospitals, selectedHospital, on
   const overlaysRef = useRef([])
   const userMarkerRef = useRef(null)
 
-  // 최초 지도 생성
+  // 최초 지도 생성 (마운트 시 1회)
   useEffect(() => {
     if (!containerRef.current || !window.kakao) return
     const { kakao } = window
     const center = new kakao.maps.LatLng(userLocation.lat, userLocation.lng)
 
     mapRef.current = new kakao.maps.Map(containerRef.current, { center, level: 6 })
-
-    // 내 위치 마커
     userMarkerRef.current = new kakao.maps.Marker({ position: center, map: mapRef.current })
 
     return () => {
@@ -31,6 +29,15 @@ export default function KakaoMap({ userLocation, hospitals, selectedHospital, on
       userMarkerRef.current = null
       mapRef.current = null
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // 사용자 위치 변경 시 지도 중심 이동 + 사용자 마커 위치 업데이트
+  useEffect(() => {
+    if (!mapRef.current || !window.kakao) return
+    const center = new window.kakao.maps.LatLng(userLocation.lat, userLocation.lng)
+    mapRef.current.setCenter(center)
+    userMarkerRef.current?.setPosition(center)
   }, [userLocation])
 
   // 병원 마커 업데이트
