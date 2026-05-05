@@ -6,8 +6,25 @@ function buildKakaoDirectionsUrl(hospital) {
   return `https://map.kakao.com/link/to/${name},${hospital.lat},${hospital.lng}`
 }
 
+/** 갱신 시각을 상대 시간 문자열로 변환한다. */
+function toRelativeTime(isoString) {
+  if (!isoString) return null
+  const updated = new Date(isoString)
+  if (Number.isNaN(updated.getTime())) return null
+  const diffMs = Date.now() - updated.getTime()
+  const diffMin = Math.floor(diffMs / 60000)
+  if (diffMin < 1) return '방금 전'
+  if (diffMin < 60) return `${diffMin}분 전`
+  const diffHour = Math.floor(diffMin / 60)
+  if (diffHour < 24) return `${diffHour}시간 전`
+  return updated.toLocaleDateString('ko-KR')
+}
+
 export default function HospitalItem({ hospital, isSelected, onClick }) {
   const hasCoords = Number.isFinite(hospital.lat) && Number.isFinite(hospital.lng)
+  const isUnknown = hospital.status === 'UNKNOWN'
+  const showBeds = !isUnknown && Number.isInteger(hospital.availableBeds) && hospital.availableBeds >= 0
+  const relativeTime = toRelativeTime(hospital.updatedAt)
 
   return (
     <div
@@ -31,6 +48,15 @@ export default function HospitalItem({ hospital, isSelected, onClick }) {
           </p>
         </div>
         <StatusBadge status={hospital.status} />
+      </div>
+
+      <div style={{ display: 'flex', gap: '6px', marginTop: '6px', fontSize: '12px', color: '#6b7280', flexWrap: 'wrap' }}>
+        {showBeds ? (
+          <span>응급실 병상 <strong style={{ color: '#111827' }}>{hospital.availableBeds}</strong>개</span>
+        ) : (
+          <span style={{ color: '#9ca3af' }}>병상 정보 없음</span>
+        )}
+        {relativeTime && <span style={{ color: '#9ca3af' }}>· {relativeTime} 갱신</span>}
       </div>
 
       <div style={{ display: 'flex', gap: '12px', marginTop: '8px', alignItems: 'center' }}>
