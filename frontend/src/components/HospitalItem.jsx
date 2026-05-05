@@ -59,6 +59,17 @@ export default function HospitalItem({ hospital, isSelected, onClick }) {
         {relativeTime && <span style={{ color: '#9ca3af' }}>· {relativeTime} 갱신</span>}
       </div>
 
+      {hospital.blockMessages?.length > 0 && (
+        <div style={{ marginTop: '8px', padding: '6px 10px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px' }}>
+          {hospital.blockMessages.map((m, idx) => (
+            <p key={`${m.diseaseTypeName ?? ''}-${m.messageType ?? ''}-${m.message ?? ''}-${idx}`} style={{ fontSize: '12px', color: '#991b1b', lineHeight: 1.4 }}>
+              ⚠️ <strong>{m.diseaseTypeName || m.messageType || '수용 제한'}</strong>
+              {m.message && <span> · {m.message}</span>}
+            </p>
+          ))}
+        </div>
+      )}
+
       <div style={{ display: 'flex', gap: '12px', marginTop: '8px', alignItems: 'center' }}>
         {hospital.phone && (
           <a
