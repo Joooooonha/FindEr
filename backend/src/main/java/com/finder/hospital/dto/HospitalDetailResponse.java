@@ -6,6 +6,8 @@ import com.finder.hospital.domain.Hospital;
 import com.finder.hospital.domain.HospitalStatus;
 
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 public record HospitalDetailResponse(
         String id,
@@ -20,13 +22,15 @@ public record HospitalDetailResponse(
         String updatedAt,
         double lat,
         double lng,
-        List<BlockMessageResponse> blockMessages
+        List<BlockMessageResponse> blockMessages,
+        List<String> availableTreatments
 ) {
     public static HospitalDetailResponse from(
             Hospital hospital,
             BedSnapshot bed,
             int staleThresholdMinutes,
-            List<BlockMessage> activeBlockMessages
+            List<BlockMessage> activeBlockMessages,
+            Set<String> availableTreatmentCodes
     ) {
         HospitalStatus status = bed != null ? bed.toStatus(staleThresholdMinutes) : HospitalStatus.UNKNOWN;
         Integer beds = bed != null ? bed.availableEmergencyBeds() : null;
@@ -44,7 +48,13 @@ public record HospitalDetailResponse(
                 updatedAt,
                 hospital.getLat(),
                 hospital.getLng(),
-                BlockMessageResponse.fromList(activeBlockMessages)
+                BlockMessageResponse.fromList(activeBlockMessages),
+                sortedList(availableTreatmentCodes)
         );
+    }
+
+    private static List<String> sortedList(Set<String> codes) {
+        if (codes == null || codes.isEmpty()) return List.of();
+        return new TreeSet<>(codes).stream().toList();
     }
 }

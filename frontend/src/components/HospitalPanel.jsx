@@ -1,8 +1,10 @@
 import HospitalItem from './HospitalItem'
 import LocationSearch from './LocationSearch'
+import TreatmentFilter from './TreatmentFilter'
 
 export default function HospitalPanel({
   hospitals,
+  totalCount,
   loading,
   radius,
   onRadiusChange,
@@ -12,7 +14,14 @@ export default function HospitalPanel({
   isCustom,
   customLabel,
   onResetToGps,
+  selectedTreatments,
+  onTreatmentsChange,
 }) {
+  const filtered = selectedTreatments?.length > 0
+  const countText = filtered
+    ? `${hospitals.length}개 매칭 (전체 ${totalCount}개 중)`
+    : `${hospitals.length}개 응급실`
+
   return (
     <div style={{
       width: '340px',
@@ -60,10 +69,13 @@ export default function HospitalPanel({
         </div>
       </div>
 
+      {/* 증상별 필터 */}
+      <TreatmentFilter selected={selectedTreatments ?? []} onChange={onTreatmentsChange} />
+
       {/* 병원 수 */}
       <div style={{ padding: '10px 16px', background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
         <p style={{ fontSize: '12px', color: '#6b7280' }}>
-          {loading ? '검색 중...' : `${hospitals.length}개 응급실`}
+          {loading ? '검색 중...' : countText}
         </p>
       </div>
 
@@ -75,7 +87,7 @@ export default function HospitalPanel({
           </div>
         ) : hospitals.length === 0 ? (
           <div style={{ padding: '40px 16px', textAlign: 'center', color: '#9ca3af', fontSize: '14px' }}>
-            주변 응급실이 없습니다
+            {filtered ? '선택한 시술이 가능한 응급실이 없습니다' : '주변 응급실이 없습니다'}
           </div>
         ) : (
           hospitals.map(h => (

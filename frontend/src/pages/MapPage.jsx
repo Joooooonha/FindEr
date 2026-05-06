@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import KakaoMap from '../components/KakaoMap'
 import HospitalPanel from '../components/HospitalPanel'
+import { matchesAllGroups } from '../components/TreatmentFilter'
 import { fetchHospitals } from '../api/hospital'
 
 const DEFAULT_LOCATION = { lat: 37.5665, lng: 126.9780 } // 서울 시청
@@ -10,6 +11,7 @@ export default function MapPage() {
   const [customLocation, setCustomLocation] = useState(null)
   const [hospitals, setHospitals] = useState([])
   const [radius, setRadius] = useState(5)
+  const [selectedTreatments, setSelectedTreatments] = useState([])
   const [selectedHospital, setSelectedHospital] = useState(null)
   const [loading, setLoading] = useState(false)
 
@@ -35,6 +37,12 @@ export default function MapPage() {
       .finally(() => setLoading(false))
   }, [userLocation, radius])
 
+  // 선택된 증상 필터에 따라 병원 목록 필터링
+  const visibleHospitals = useMemo(() => {
+    if (selectedTreatments.length === 0) return hospitals
+    return hospitals.filter(h => matchesAllGroups(h.availableTreatments, selectedTreatments))
+  }, [hospitals, selectedTreatments])
+
   if (!userLocation) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#6b7280', fontSize: '14px' }}>
@@ -46,7 +54,8 @@ export default function MapPage() {
   return (
     <div style={{ display: 'flex', height: '100%' }}>
       <HospitalPanel
-        hospitals={hospitals}
+        hospitals={visibleHospitals}
+        totalCount={hospitals.length}
         loading={loading}
         radius={radius}
         onRadiusChange={setRadius}
@@ -56,10 +65,12 @@ export default function MapPage() {
         isCustom={Boolean(customLocation)}
         customLabel={customLocation?.label}
         onResetToGps={() => setCustomLocation(null)}
+        selectedTreatments={selectedTreatments}
+        onTreatmentsChange={setSelectedTreatments}
       />
       <KakaoMap
         userLocation={userLocation}
-        hospitals={hospitals}
+        hospitals={visibleHospitals}
         selectedHospital={selectedHospital}
         onHospitalClick={setSelectedHospital}
       />
