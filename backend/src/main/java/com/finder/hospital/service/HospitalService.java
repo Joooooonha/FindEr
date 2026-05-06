@@ -10,9 +10,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 /** 응급실 조회 유스케이스. 마스터 캐시 + 실시간 병상 + 차단메시지 + 가용 시술 결합. */
 @Service
@@ -34,16 +36,18 @@ public class HospitalService {
     public HospitalListResponse getHospitals(double lat, double lng, double radiusKm) {
         Collection<HospitalInfo> source = resolveSource(lat, lng);
 
+        // distanceTo()는 stream 단계마다 반복 호출되면 N×3회 계산되므로 한 번만 산출해 entry로 들고 다닌다.
         List<HospitalResponse> hospitals = source.stream()
-                .filter(h -> h.distanceTo(lat, lng) <= radiusKm)
-                .sorted(Comparator.comparingDouble(h -> h.distanceTo(lat, lng)))
-                .map(h -> HospitalResponse.of(
-                        h,
-                        h.distanceTo(lat, lng),
-                        bedInfoCache.find(h.id()).orElse(null),
+                .map(h -> (Map.Entry<HospitalInfo, Double>) new AbstractMap.SimpleImmutableEntry<>(h, h.distanceTo(lat, lng)))
+                .filter(e -> e.getValue() <= radiusKm)
+                .sorted(Comparator.comparingDouble(Map.Entry::getValue))
+                .map(e -> HospitalResponse.of(
+                        e.getKey(),
+                        e.getValue(),
+                        bedInfoCache.find(e.getKey().id()).orElse(null),
                         staleThresholdMinutes,
-                        blockMessageCache.findActive(h.id()),
-                        severePossibilityCache.findCodes(h.id())))
+                        blockMessageCache.findActive(e.getKey().id()),
+                        severePossibilityCache.findCodes(e.getKey().id())))
                 .toList();
 
         return new HospitalListResponse(hospitals);
@@ -64,9 +68,10 @@ public class HospitalService {
         );
     }
 
-    /** 마스터 캐시가 워밍업 안 됐을 때만 위치 API로 폴백한다. */
+    /** 마스터 캐시 스냅샷을 한 번에 받아 isEmpty 검사와 사용을 일관된 뷰로 처리한다 (스케줄러와의 race 회피). */
     private Collection<HospitalInfo> resolveSource(double lat, double lng) {
-        if (!hospitalInfoCache.isEmpty()) return hospitalInfoCache.all();
+        Collection<HospitalInfo> snapshot = hospitalInfoCache.all();
+        if (!snapshot.isEmpty()) return snapshot;
         return eGenApiClient.getHospitalsByLocation(lat, lng, FALLBACK_FETCH_COUNT)
                 .stream()
                 .map(HospitalInfo::from)

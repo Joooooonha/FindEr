@@ -35,11 +35,16 @@ public class HospitalInfoScheduler {
         for (EGenItem item : items) {
             if (item.getHpid() == null || item.getHpid().isBlank()) continue;
             HospitalInfo info = HospitalInfo.from(item);
-            // 좌표 0 (파싱 실패)인 항목은 거리 계산이 무의미하므로 제외
-            if (info.lat() == 0.0 && info.lng() == 0.0) continue;
+            // 한국 영토 좌표 범위 밖(파싱 실패·일부 누락 포함)은 거리 계산이 왜곡되므로 제외
+            if (!isValidKoreanCoordinate(info.lat(), info.lng())) continue;
             snapshot.put(info.id(), info);
         }
         cache.replaceAll(snapshot);
         log.info("응급의료기관 기본정보 갱신 완료. 병원 {}개", snapshot.size());
+    }
+
+    /** 한국 영토 좌표 범위 검증. 위도 33~39.5°, 경도 124~132°. */
+    private static boolean isValidKoreanCoordinate(double lat, double lng) {
+        return lat >= 33.0 && lat <= 39.5 && lng >= 124.0 && lng <= 132.0;
     }
 }

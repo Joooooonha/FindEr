@@ -64,6 +64,7 @@ public class EGenApiClientImpl implements EGenApiClient {
         return items.isEmpty() ? Optional.empty() : Optional.of(items.get(0));
     }
 
+    /** 페이지 중간에 실패하면 부분 데이터 반환을 피하기 위해 전체를 빈 리스트로 폐기한다. */
     @Override
     public List<EGenItem> getAllHospitals() {
         if (apiKey == null || apiKey.isBlank()) {
@@ -73,7 +74,13 @@ public class EGenApiClientImpl implements EGenApiClient {
 
         List<EGenItem> all = new ArrayList<>();
         for (int page = 1; page <= BULK_MAX_PAGES; page++) {
-            List<EGenItem> pageItems = fetchPage(page);
+            List<EGenItem> pageItems;
+            try {
+                pageItems = fetchPageStrict(page);
+            } catch (Exception e) {
+                log.error("응급의료기관 일괄 조회 실패 (page={}): {} — 부분 데이터 폐기", page, e.getMessage());
+                return List.of();
+            }
             if (pageItems.isEmpty()) break;
             all.addAll(pageItems);
             if (pageItems.size() < BULK_PAGE_SIZE) break;
@@ -81,7 +88,7 @@ public class EGenApiClientImpl implements EGenApiClient {
         return all;
     }
 
-    private List<EGenItem> fetchPage(int pageNo) {
+    private List<EGenItem> fetchPageStrict(int pageNo) throws Exception {
         String url = UriComponentsBuilder.fromHttpUrl(baseUrl + DETAIL_PATH)
                 .queryParam("serviceKey", apiKey)
                 .queryParam("pageNo", pageNo)
@@ -89,29 +96,32 @@ public class EGenApiClientImpl implements EGenApiClient {
                 .queryParam("_type", "json")
                 .build(true)
                 .toUriString();
-        return fetchItems(url);
+        return parseItems(restTemplate.getForObject(url, String.class));
     }
 
-    /** 단건/복수 응답을 모두 처리한다. E-Gen API는 단건일 때 배열 대신 객체로 반환한다. */
+    /** 단건/복수 응답을 모두 처리한다. 호출 실패 시 빈 리스트로 폴백 (단일 호출용). */
     private List<EGenItem> fetchItems(String url) {
         try {
-            String response = restTemplate.getForObject(url, String.class);
-            JsonNode itemNode = objectMapper.readTree(response).at("/response/body/items/item");
-
-            if (itemNode.isMissingNode() || itemNode.isNull()) return List.of();
-
-            List<EGenItem> items = new ArrayList<>();
-            if (itemNode.isArray()) {
-                for (JsonNode node : itemNode) {
-                    items.add(objectMapper.treeToValue(node, EGenItem.class));
-                }
-            } else {
-                items.add(objectMapper.treeToValue(itemNode, EGenItem.class));
-            }
-            return items;
+            return parseItems(restTemplate.getForObject(url, String.class));
         } catch (Exception e) {
             log.error("E-Gen API 호출 실패: {}", e.getMessage());
             return List.of();
         }
+    }
+
+    /** E-Gen API는 단건일 때 배열 대신 객체로 반환한다. */
+    private List<EGenItem> parseItems(String response) throws Exception {
+        JsonNode itemNode = objectMapper.readTree(response).at("/response/body/items/item");
+        if (itemNode.isMissingNode() || itemNode.isNull()) return List.of();
+
+        List<EGenItem> items = new ArrayList<>();
+        if (itemNode.isArray()) {
+            for (JsonNode node : itemNode) {
+                items.add(objectMapper.treeToValue(node, EGenItem.class));
+            }
+        } else {
+            items.add(objectMapper.treeToValue(itemNode, EGenItem.class));
+        }
+        return items;
     }
 }
