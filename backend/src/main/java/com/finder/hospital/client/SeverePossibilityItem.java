@@ -6,4 +6,9 @@ import java.util.Set;
 public record SeverePossibilityItem(
         String hpid,
         Set<String> availableCodes
-) {}
+) {
+    /** 외부에서 전달받은 가변 컬렉션이 record 내부 상태로 새지 않도록 불변 사본을 보관한다. */
+    public SeverePossibilityItem {
+        availableCodes = availableCodes == null ? Set.of() : Set.copyOf(availableCodes);
+    }
+}

@@ -43,6 +43,14 @@ export default function MapPage() {
     return hospitals.filter(h => matchesAllGroups(h.availableTreatments, selectedTreatments))
   }, [hospitals, selectedTreatments])
 
+  // 필터링 결과에 선택된 병원이 빠지면 선택을 해제한다.
+  useEffect(() => {
+    if (!selectedHospital) return
+    if (!visibleHospitals.some(h => h.id === selectedHospital.id)) {
+      setSelectedHospital(null)
+    }
+  }, [visibleHospitals, selectedHospital])
+
   if (!userLocation) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#6b7280', fontSize: '14px' }}>

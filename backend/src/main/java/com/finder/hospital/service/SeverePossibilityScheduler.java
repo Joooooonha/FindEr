@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,13 +33,12 @@ public class SeverePossibilityScheduler {
         }
 
         // 같은 hpid가 여러 시도에서 중복될 수 있으므로 union으로 병합한다.
+        // record가 반환하는 불변 Set을 직접 변형하지 않도록 가변 사본을 만들어 누적한다.
         Map<String, Set<String>> grouped = new HashMap<>();
         for (SeverePossibilityItem item : items) {
             if (item.hpid() == null || item.hpid().isBlank()) continue;
-            grouped.merge(item.hpid(), item.availableCodes(), (existing, incoming) -> {
-                existing.addAll(incoming);
-                return existing;
-            });
+            grouped.computeIfAbsent(item.hpid(), k -> new HashSet<>())
+                    .addAll(item.availableCodes());
         }
         cache.replaceAll(grouped);
         log.info("중증질환 시술 정보 갱신 완료. 병원 {}개", grouped.size());

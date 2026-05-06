@@ -7,7 +7,6 @@ import com.finder.hospital.domain.HospitalStatus;
 
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 
 public record HospitalDetailResponse(
         String id,
@@ -55,6 +54,6 @@ public record HospitalDetailResponse(
 
     private static List<String> sortedList(Set<String> codes) {
         if (codes == null || codes.isEmpty()) return List.of();
-        return new TreeSet<>(codes).stream().toList();
+        return codes.stream().sorted().toList();
     }
 }

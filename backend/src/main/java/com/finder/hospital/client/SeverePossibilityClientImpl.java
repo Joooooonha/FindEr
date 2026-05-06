@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -41,6 +43,7 @@ public class SeverePossibilityClientImpl implements SeverePossibilityClient {
     @Value("${egen.api.base-url}")
     private String baseUrl;
 
+    /** 17개 시도(STAGE1)를 순회하며 시술 가능 정보를 모아 반환한다. */
     @Override
     public List<SeverePossibilityItem> getAllPossibilities() {
         if (apiKey == null || apiKey.isBlank()) {
@@ -56,19 +59,21 @@ public class SeverePossibilityClientImpl implements SeverePossibilityClient {
     }
 
     private List<SeverePossibilityItem> fetchByStage1(String stage1) {
+        // STAGE1은 한글이라 URL 인코딩이 필요하다. 미리 인코딩한 뒤 build(true)로 builder의 추가 인코딩을 막아 이중 인코딩을 방지한다.
+        String encodedStage1 = URLEncoder.encode(stage1, StandardCharsets.UTF_8);
         String url = UriComponentsBuilder.fromHttpUrl(baseUrl + PATH)
                 .queryParam("serviceKey", apiKey)
-                .queryParam("STAGE1", stage1)
+                .queryParam("STAGE1", encodedStage1)
                 .queryParam("pageNo", 1)
                 .queryParam("numOfRows", FETCH_SIZE)
                 .queryParam("_type", "json")
-                .build()
-                .encode()
+                .build(true)
                 .toUriString();
 
         try {
             String response = restTemplate.getForObject(url, String.class);
-            JsonNode itemNode = objectMapper.readTree(response).at("/response/body/items/item");
+            JsonNode body = objectMapper.readTree(response).at("/response/body");
+            JsonNode itemNode = body.path("items").path("item");
             if (itemNode.isMissingNode() || itemNode.isNull()) return List.of();
 
             List<SeverePossibilityItem> items = new ArrayList<>();
@@ -78,6 +83,12 @@ public class SeverePossibilityClientImpl implements SeverePossibilityClient {
                 }
             } else {
                 items.add(toItem(itemNode));
+            }
+
+            int totalCount = body.path("totalCount").asInt(items.size());
+            if (totalCount > FETCH_SIZE) {
+                log.warn("중증질환 API 응답이 페이지 한계({}) 초과 ({}, totalCount={}). 일부 데이터 누락 가능",
+                        FETCH_SIZE, stage1, totalCount);
             }
             return items;
         } catch (Exception e) {

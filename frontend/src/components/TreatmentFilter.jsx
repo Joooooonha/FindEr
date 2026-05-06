@@ -51,6 +51,7 @@ export default function TreatmentFilter({ selected, onChange }) {
             <button
               key={group.id}
               type="button"
+              aria-pressed={active}
               onClick={() => toggle(group.id)}
               style={{
                 padding: '4px 10px',
