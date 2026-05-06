@@ -32,12 +32,24 @@ public class HospitalInfoScheduler {
         }
 
         Map<String, HospitalInfo> snapshot = new HashMap<>();
+        int filteredOutNonEmergency = 0;
         for (EGenItem item : items) {
             if (item.getHpid() == null || item.getHpid().isBlank()) continue;
+            // 응답에 의원·일반 의료기관까지 섞여 들어오므로 응급실 운영(dutyEryn=1)만 캐시한다.
+            if (!item.isEmergencyOperating()) {
+                filteredOutNonEmergency++;
+                continue;
+            }
             HospitalInfo info = HospitalInfo.from(item);
             // 한국 영토 좌표 범위 밖(파싱 실패·일부 누락 포함)은 거리 계산이 왜곡되므로 제외
             if (!isValidKoreanCoordinate(info.lat(), info.lng())) continue;
             snapshot.put(info.id(), info);
+        }
+        log.debug("응급실 미운영 시설 {}개 제외", filteredOutNonEmergency);
+        if (snapshot.isEmpty()) {
+            log.warn("응급실 운영 병원이 0개로 필터됨 (비운영 제외: {}개, 전체: {}개). 기존 캐시 유지",
+                    filteredOutNonEmergency, items.size());
+            return;
         }
         cache.replaceAll(snapshot);
         log.info("응급의료기관 기본정보 갱신 완료. 병원 {}개", snapshot.size());

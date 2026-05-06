@@ -16,6 +16,7 @@ public class EGenItem {
     @JsonProperty("dutyAddr") private String dutyAddr;
     @JsonProperty("dutyTel1") private String dutyTel1;
     @JsonProperty("dutyTel3") private String dutyTel3;   // 응급실 직통전화 (기본정보 API)
+    @JsonProperty("dutyEryn") private String dutyEryn;   // 응급실 운영 여부 (1=운영, 2=미운영)
 
     // 위치조회 API 좌표 필드
     @JsonProperty("latitude")  private String latitude;
@@ -43,5 +44,10 @@ public class EGenItem {
     /** 응급실 직통전화 우선, 없으면 대표전화 반환 */
     public String getContactPhone() {
         return dutyTel3 != null ? dutyTel3 : dutyTel1;
+    }
+
+    /** 응급실 운영 여부. dutyEryn 값이 "1"인 경우만 운영으로 간주. */
+    public boolean isEmergencyOperating() {
+        return "1".equals(dutyEryn);
     }
 }
