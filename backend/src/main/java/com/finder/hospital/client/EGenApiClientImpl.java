@@ -22,6 +22,8 @@ public class EGenApiClientImpl implements EGenApiClient {
     private static final Logger log = LoggerFactory.getLogger(EGenApiClientImpl.class);
     private static final String LOCATION_PATH = "/getEgytLcinfoInqire";
     private static final String DETAIL_PATH   = "/getEgytBassInfoInqire";
+    private static final int BULK_PAGE_SIZE = 200;
+    private static final int BULK_MAX_PAGES = 20;  // 200 × 20 = 4000건. 응급의료기관 약 530개 대비 충분.
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
@@ -60,6 +62,34 @@ public class EGenApiClientImpl implements EGenApiClient {
 
         List<EGenItem> items = fetchItems(url);
         return items.isEmpty() ? Optional.empty() : Optional.of(items.get(0));
+    }
+
+    @Override
+    public List<EGenItem> getAllHospitals() {
+        if (apiKey == null || apiKey.isBlank()) {
+            log.warn("E-Gen API 키 미설정");
+            return List.of();
+        }
+
+        List<EGenItem> all = new ArrayList<>();
+        for (int page = 1; page <= BULK_MAX_PAGES; page++) {
+            List<EGenItem> pageItems = fetchPage(page);
+            if (pageItems.isEmpty()) break;
+            all.addAll(pageItems);
+            if (pageItems.size() < BULK_PAGE_SIZE) break;
+        }
+        return all;
+    }
+
+    private List<EGenItem> fetchPage(int pageNo) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + DETAIL_PATH)
+                .queryParam("serviceKey", apiKey)
+                .queryParam("pageNo", pageNo)
+                .queryParam("numOfRows", BULK_PAGE_SIZE)
+                .queryParam("_type", "json")
+                .build(true)
+                .toUriString();
+        return fetchItems(url);
     }
 
     /** 단건/복수 응답을 모두 처리한다. E-Gen API는 단건일 때 배열 대신 객체로 반환한다. */
