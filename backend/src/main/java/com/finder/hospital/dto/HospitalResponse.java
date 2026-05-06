@@ -2,7 +2,7 @@ package com.finder.hospital.dto;
 
 import com.finder.hospital.domain.BedSnapshot;
 import com.finder.hospital.domain.BlockMessage;
-import com.finder.hospital.domain.Hospital;
+import com.finder.hospital.domain.HospitalInfo;
 import com.finder.hospital.domain.HospitalStatus;
 
 import java.util.List;
@@ -23,7 +23,7 @@ public record HospitalResponse(
         List<String> availableTreatments
 ) {
     public static HospitalResponse of(
-            Hospital hospital,
+            HospitalInfo info,
             double distance,
             BedSnapshot bed,
             int staleThresholdMinutes,
@@ -34,16 +34,16 @@ public record HospitalResponse(
         Integer beds = bed != null ? bed.availableEmergencyBeds() : null;
         String updatedAt = bed != null && bed.updatedAt() != null ? bed.updatedAt().toString() : null;
         return new HospitalResponse(
-                hospital.getId(),
-                hospital.getName(),
-                hospital.getAddress(),
-                hospital.getPhone(),
+                info.id(),
+                info.name(),
+                info.address(),
+                info.phone(),
                 Math.round(distance * 10.0) / 10.0,
                 status,
                 beds,
                 updatedAt,
-                hospital.getLat(),
-                hospital.getLng(),
+                info.lat(),
+                info.lng(),
                 BlockMessageResponse.fromList(activeBlockMessages),
                 sortedList(availableTreatmentCodes)
         );
