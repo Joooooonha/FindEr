@@ -46,26 +46,22 @@ export default function HospitalPanel({
 
       {/* 반경 선택 */}
       <div style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb' }}>
-        <p style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '8px' }}>검색 반경</p>
-        <div style={{ display: 'flex', gap: '6px' }}>
-          {[3, 5, 10].map(r => (
-            <button
-              key={r}
-              onClick={() => onRadiusChange(r)}
-              style={{
-                padding: '5px 14px',
-                borderRadius: '20px',
-                border: radius === r ? 'none' : '1px solid #d1d5db',
-                background: radius === r ? '#3b82f6' : '#fff',
-                color: radius === r ? '#fff' : '#374151',
-                cursor: 'pointer',
-                fontSize: '13px',
-                fontWeight: radius === r ? 600 : 400,
-              }}
-            >
-              {r}km
-            </button>
-          ))}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <p style={{ fontSize: '12px', color: '#9ca3af' }}>검색 반경</p>
+          <p style={{ fontSize: '13px', color: '#3b82f6', fontWeight: 600 }}>{radius}km</p>
+        </div>
+        <input
+          type="range"
+          min="1"
+          max="20"
+          step="1"
+          value={radius}
+          onChange={e => onRadiusChange(Number(e.target.value))}
+          style={{ width: '100%', accentColor: '#3b82f6', cursor: 'pointer' }}
+        />
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>
+          <span>1km</span>
+          <span>20km</span>
         </div>
       </div>
 
