@@ -88,7 +88,8 @@ public class EGenApiClientImpl implements EGenApiClient {
 
         try {
             String response = restTemplate.getForObject(url, String.class);
-            JsonNode itemNode = objectMapper.readTree(response).at("/response/body/items/item");
+            JsonNode body = objectMapper.readTree(response).at("/response/body");
+            JsonNode itemNode = body.path("items").path("item");
             if (itemNode.isMissingNode() || itemNode.isNull()) return Set.of();
 
             Set<String> hpids = new HashSet<>();
@@ -100,6 +101,12 @@ public class EGenApiClientImpl implements EGenApiClient {
             } else {
                 String hpid = itemNode.path("hpid").asText("");
                 if (!hpid.isBlank()) hpids.add(hpid);
+            }
+
+            int totalCount = body.path("totalCount").asInt(hpids.size());
+            if (totalCount > HPID_FETCH_SIZE) {
+                log.warn("응급실 hpid 응답이 페이지 한계({}) 초과 (totalCount={}). 일부 응급실 누락 가능",
+                        HPID_FETCH_SIZE, totalCount);
             }
             return hpids;
         } catch (Exception e) {
