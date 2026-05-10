@@ -11,8 +11,10 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /** E-Gen API 실제 호출 구현체 */
 @Component
@@ -22,8 +24,9 @@ public class EGenApiClientImpl implements EGenApiClient {
     private static final Logger log = LoggerFactory.getLogger(EGenApiClientImpl.class);
     private static final String LOCATION_PATH = "/getEgytLcinfoInqire";
     private static final String DETAIL_PATH   = "/getEgytBassInfoInqire";
-    private static final int BULK_PAGE_SIZE = 200;
-    private static final int BULK_MAX_PAGES = 20;  // 200 × 20 = 4000건. 응급의료기관 약 530개 대비 충분.
+    // 응급실 실시간 가용병상 — 응답이 응급실 운영 기관으로 한정되므로 hpid 화이트리스트 출처로 사용한다.
+    private static final String RLTM_PATH     = "/getEmrrmRltmUsefulSckbdInfoInqire";
+    private static final int HPID_FETCH_SIZE = 1000;  // 전국 응급실 약 420개 대비 충분.
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
@@ -64,42 +67,48 @@ public class EGenApiClientImpl implements EGenApiClient {
         return items.isEmpty() ? Optional.empty() : Optional.of(items.get(0));
     }
 
-    /** 페이지 중간에 실패하면 부분 데이터 반환을 피하기 위해 전체를 빈 리스트로 폐기한다. */
+    /**
+     * 기본정보 API는 일반 의원·치과까지 10만 건 이상 반환해 응급실 식별이 어렵다.
+     * 실시간 가용병상 API는 응급실 운영 기관만 응답하므로 hpid 셋을 화이트리스트로 활용한다.
+     */
     @Override
-    public List<EGenItem> getAllHospitals() {
+    public Set<String> getEmergencyHpids() {
         if (apiKey == null || apiKey.isBlank()) {
             log.warn("E-Gen API 키 미설정");
-            return List.of();
+            return Set.of();
         }
 
-        List<EGenItem> all = new ArrayList<>();
-        for (int page = 1; page <= BULK_MAX_PAGES; page++) {
-            List<EGenItem> pageItems;
-            try {
-                pageItems = fetchPageStrict(page);
-            } catch (Exception e) {
-                log.error("응급의료기관 일괄 조회 실패 (page={}): {} — 부분 데이터 폐기", page, e.getMessage());
-                return List.of();
-            }
-            if (pageItems.isEmpty()) break;
-            all.addAll(pageItems);
-            if (pageItems.size() < BULK_PAGE_SIZE) break;
-        }
-        return all;
-    }
-
-    private List<EGenItem> fetchPageStrict(int pageNo) throws Exception {
-        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + DETAIL_PATH)
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + RLTM_PATH)
                 .queryParam("serviceKey", apiKey)
-                .queryParam("pageNo", pageNo)
-                .queryParam("numOfRows", BULK_PAGE_SIZE)
+                .queryParam("pageNo", 1)
+                .queryParam("numOfRows", HPID_FETCH_SIZE)
                 .queryParam("_type", "json")
                 .build(true)
                 .toUriString();
-        return parseItems(restTemplate.getForObject(url, String.class));
+
+        try {
+            String response = restTemplate.getForObject(url, String.class);
+            JsonNode itemNode = objectMapper.readTree(response).at("/response/body/items/item");
+            if (itemNode.isMissingNode() || itemNode.isNull()) return Set.of();
+
+            Set<String> hpids = new HashSet<>();
+            if (itemNode.isArray()) {
+                for (JsonNode node : itemNode) {
+                    String hpid = node.path("hpid").asText("");
+                    if (!hpid.isBlank()) hpids.add(hpid);
+                }
+            } else {
+                String hpid = itemNode.path("hpid").asText("");
+                if (!hpid.isBlank()) hpids.add(hpid);
+            }
+            return hpids;
+        } catch (Exception e) {
+            log.error("응급실 hpid 화이트리스트 조회 실패: {}", e.getMessage());
+            return Set.of();
+        }
     }
 
-    /** 단건/복수 응답을 모두 처리한다. 호출 실패 시 빈 리스트로 폴백 (단일 호출용). */
+    /** 단건/복수 응답을 모두 처리한다. 호출 실패 시 빈 리스트로 폴백. */
     private List<EGenItem> fetchItems(String url) {
         try {
             return parseItems(restTemplate.getForObject(url, String.class));

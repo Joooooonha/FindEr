@@ -10,8 +10,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 /** 응급의료기관 기본정보 주기적 폴링. 좌표·연락처는 거의 변하지 않아 24시간 주기로 충분. */
 @Component
@@ -23,36 +24,39 @@ public class HospitalInfoScheduler {
     private final EGenApiClient eGenApiClient;
     private final HospitalInfoCache cache;
 
+    /**
+     * 응급실 hpid 화이트리스트 → 단건 기본정보 조회로 좌표·주소를 보강해 캐시한다.
+     * 기본정보 API 페이지네이션은 일반 의원까지 10만 건 이상 반환해 응급실 식별이 불가하므로
+     * 실시간 가용병상 API의 hpid 셋을 출처로 삼는다.
+     */
     @Scheduled(fixedDelayString = "${hospital.info.refresh-interval-ms}")
     public void refresh() {
-        List<EGenItem> items = eGenApiClient.getAllHospitals();
-        if (items.isEmpty()) {
-            log.warn("응급의료기관 기본정보 갱신 실패 또는 응답 비어있음. 기존 캐시 유지");
+        Set<String> hpids = eGenApiClient.getEmergencyHpids();
+        if (hpids.isEmpty()) {
+            log.warn("응급실 hpid 화이트리스트 조회 실패 또는 비어있음. 기존 캐시 유지");
             return;
         }
 
         Map<String, HospitalInfo> snapshot = new HashMap<>();
-        int filteredOutNonEmergency = 0;
-        for (EGenItem item : items) {
-            if (item.getHpid() == null || item.getHpid().isBlank()) continue;
-            // 응답에 의원·일반 의료기관까지 섞여 들어오므로 응급실 운영(dutyEryn=1)만 캐시한다.
-            if (!item.isEmergencyOperating()) {
-                filteredOutNonEmergency++;
-                continue;
-            }
-            HospitalInfo info = HospitalInfo.from(item);
+        int notFound = 0;
+        int invalidCoord = 0;
+        for (String hpid : hpids) {
+            Optional<EGenItem> opt = eGenApiClient.getHospitalById(hpid);
+            if (opt.isEmpty()) { notFound++; continue; }
+            HospitalInfo info = HospitalInfo.from(opt.get());
             // 한국 영토 좌표 범위 밖(파싱 실패·일부 누락 포함)은 거리 계산이 왜곡되므로 제외
-            if (!isValidKoreanCoordinate(info.lat(), info.lng())) continue;
+            if (!isValidKoreanCoordinate(info.lat(), info.lng())) { invalidCoord++; continue; }
             snapshot.put(info.id(), info);
         }
-        log.debug("응급실 미운영 시설 {}개 제외", filteredOutNonEmergency);
+
         if (snapshot.isEmpty()) {
-            log.warn("응급실 운영 병원이 0개로 필터됨 (비운영 제외: {}개, 전체: {}개). 기존 캐시 유지",
-                    filteredOutNonEmergency, items.size());
+            log.warn("응급실 보강 결과 0개 (대상 {}개, 조회 실패 {}, 좌표 누락 {}). 기존 캐시 유지",
+                    hpids.size(), notFound, invalidCoord);
             return;
         }
         cache.replaceAll(snapshot);
-        log.info("응급의료기관 기본정보 갱신 완료. 병원 {}개", snapshot.size());
+        log.info("응급의료기관 기본정보 갱신 완료. 병원 {}개 (조회 실패 {}, 좌표 누락 {})",
+                snapshot.size(), notFound, invalidCoord);
     }
 
     /** 한국 영토 좌표 범위 검증. 위도 33~39.5°, 경도 124~132°. */
