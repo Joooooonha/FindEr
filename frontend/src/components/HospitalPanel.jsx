@@ -57,6 +57,7 @@ export default function HospitalPanel({
           step="1"
           value={radius}
           onChange={e => onRadiusChange(Number(e.target.value))}
+          aria-label="검색 반경"
           style={{ width: '100%', accentColor: '#3b82f6', cursor: 'pointer' }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>
