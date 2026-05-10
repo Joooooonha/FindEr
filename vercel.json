@@ -3,6 +3,7 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
+    { "source": "/api/:path*", "destination": "http://54.180.68.245:8080/api/:path*" },
     { "source": "/(.*)", "destination": "/" }
   ]
 }

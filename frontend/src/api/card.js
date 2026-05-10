@@ -1,4 +1,5 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
+// 환경변수 trailing slash 가 들어와도 // 가 안 생기게 정규화한다.
+const BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
 const TIMEOUT_MS = 10000
 
 async function request(path, options = {}) {
