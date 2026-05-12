@@ -46,9 +46,9 @@ public record BedSnapshot(
         return HospitalStatus.GREEN;
     }
 
-    public boolean isStale(int staleThresholdMinutes) {
+    public boolean isStale(int staleThresholdMinutes, LocalDateTime now) {
         if (updatedAt == null) return true;
-        return Duration.between(updatedAt, LocalDateTime.now()).toMinutes() > staleThresholdMinutes;
+        return Duration.between(updatedAt, now).toMinutes() > staleThresholdMinutes;
     }
 
     private static LocalDateTime parseDate(String value) {

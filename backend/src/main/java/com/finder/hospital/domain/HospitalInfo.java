@@ -12,7 +12,8 @@ public record HospitalInfo(
         double lng,
         boolean surgeryAvailable,
         boolean ctAvailable,
-        boolean mriAvailable
+        boolean mriAvailable,
+        boolean ventilatorAvailable
 ) {
     public static HospitalInfo from(EGenItem item) {
         return new HospitalInfo(
@@ -24,7 +25,8 @@ public record HospitalInfo(
                 parseDouble(item.getLngCoord()),
                 parsePositiveInt(item.getHpopyn()) > 0,
                 "Y".equals(item.getHvctayn()),
-                "Y".equals(item.getHvmriayn())
+                "Y".equals(item.getHvmriayn()),
+                "Y".equals(item.getHvventiayn())
         );
     }
 

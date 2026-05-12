@@ -8,6 +8,7 @@ import com.finder.hospital.domain.HospitalStatus;
 import java.util.List;
 import java.util.Set;
 
+/** 병원 상세 정보 응답 DTO. */
 public record HospitalDetailResponse(
         String id,
         String name,
@@ -40,7 +41,7 @@ public record HospitalDetailResponse(
     ) {
         HospitalStatus status = bed != null ? bed.toStatus(staleThresholdMinutes) : HospitalStatus.UNKNOWN;
         Integer beds = bed != null ? bed.availableEmergencyBeds() : null;
-        boolean stale = bed == null || bed.isStale(staleThresholdMinutes);
+        boolean stale = bed == null || bed.isStale(staleThresholdMinutes, java.time.LocalDateTime.now());
         String updatedAt = bed != null && bed.updatedAt() != null ? bed.updatedAt().toString() : null;
         return new HospitalDetailResponse(
                 info.id(),
@@ -57,7 +58,7 @@ public record HospitalDetailResponse(
                 bed != null && bed.operatingRooms() != null ? bed.operatingRooms() > 0 : info.surgeryAvailable(),
                 bed != null ? bed.ctAvailable() : info.ctAvailable(),
                 bed != null ? bed.mriAvailable() : info.mriAvailable(),
-                bed != null && bed.ventilatorAvailable(),
+                bed != null ? bed.ventilatorAvailable() : info.ventilatorAvailable(),
                 stale,
                 updatedAt,
                 info.lat(),

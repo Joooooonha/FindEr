@@ -134,9 +134,9 @@ export default function HospitalDetailPanel({ hospital, loading, error, onClose 
             <div style={{ marginTop: '14px' }}>
               <h3 style={{ fontSize: '13px', color: '#111827', marginBottom: '8px' }}>수용 제한 메시지</h3>
               <div style={{ display: 'grid', gap: '6px' }}>
-                {hospital.blockMessages.slice(0, 5).map((message, index) => (
+                {hospital.blockMessages.slice(0, 5).map(message => (
                   <p
-                    key={`${message.diseaseTypeName ?? ''}-${message.message ?? ''}-${index}`}
+                    key={`${message.diseaseTypeName ?? 'unknown'}-${message.messageType ?? 'unknown'}-${message.message ?? ''}`}
                     style={{
                       padding: '8px',
                       borderRadius: '6px',
