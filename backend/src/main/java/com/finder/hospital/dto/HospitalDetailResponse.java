@@ -15,9 +15,16 @@ public record HospitalDetailResponse(
         String phone,
         HospitalStatus status,
         Integer availableBeds,
+        Integer operatingRooms,
+        Integer generalWardBeds,
+        Integer generalIcuBeds,
+        Integer neuroIcuBeds,
+        Integer emergencyIcuBeds,
         boolean surgeryAvailable,
         boolean ctAvailable,
         boolean mriAvailable,
+        boolean ventilatorAvailable,
+        boolean stale,
         String updatedAt,
         double lat,
         double lng,
@@ -33,6 +40,7 @@ public record HospitalDetailResponse(
     ) {
         HospitalStatus status = bed != null ? bed.toStatus(staleThresholdMinutes) : HospitalStatus.UNKNOWN;
         Integer beds = bed != null ? bed.availableEmergencyBeds() : null;
+        boolean stale = bed == null || bed.isStale(staleThresholdMinutes);
         String updatedAt = bed != null && bed.updatedAt() != null ? bed.updatedAt().toString() : null;
         return new HospitalDetailResponse(
                 info.id(),
@@ -41,9 +49,16 @@ public record HospitalDetailResponse(
                 info.phone(),
                 status,
                 beds,
-                info.surgeryAvailable(),
-                info.ctAvailable(),
-                info.mriAvailable(),
+                bed != null ? bed.operatingRooms() : null,
+                bed != null ? bed.generalWardBeds() : null,
+                bed != null ? bed.generalIcuBeds() : null,
+                bed != null ? bed.neuroIcuBeds() : null,
+                bed != null ? bed.emergencyIcuBeds() : null,
+                bed != null && bed.operatingRooms() != null ? bed.operatingRooms() > 0 : info.surgeryAvailable(),
+                bed != null ? bed.ctAvailable() : info.ctAvailable(),
+                bed != null ? bed.mriAvailable() : info.mriAvailable(),
+                bed != null && bed.ventilatorAvailable(),
+                stale,
                 updatedAt,
                 info.lat(),
                 info.lng(),

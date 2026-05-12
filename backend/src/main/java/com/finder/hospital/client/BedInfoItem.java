@@ -5,19 +5,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-/** safetydata.go.kr 실시간 병상정보 API 응답 항목 */
+/** safetydata.go.kr realtime bed API response item. */
 @Getter
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BedInfoItem {
 
-    @JsonProperty("BFR_INST_ID") private String hpid;       // E-Gen hpid와 동일 형식
-    @JsonProperty("EMRO")        private Integer emro;       // 응급실 가용 병상 수
-    @JsonProperty("OPRO")        private Integer opro;       // 수술실 가용
-    @JsonProperty("WARD")        private Integer ward;       // 입원실
-    @JsonProperty("GNRL_ICU")    private Integer gnrlIcu;    // 일반중환자실
+    @JsonProperty("BFR_INST_ID") private String hpid;
+    @JsonProperty("EMRO")        private Integer emro;
+    @JsonProperty("OPRO")        private Integer opro;
+    @JsonProperty("WARD")        private Integer ward;
+    @JsonProperty("GNRL_ICU")    private Integer gnrlIcu;
+    @JsonProperty("NRVS_ICU")    private Integer nrvsIcu;
+    @JsonProperty("EMRGN_ICU")   private Integer emergnIcu;
     @JsonProperty("CT_AVBL_YN")  private String ctAvailable;
     @JsonProperty("MRI_AVBL_YN") private String mriAvailable;
     @JsonProperty("VENT_AVBL_YN") private String ventAvailable;
-    @JsonProperty("MDFCN_DT")    private String modifiedAt;  // "2026-05-04 06:25:10.000"
+    @JsonProperty("MDFCN_DT")    private String modifiedAt;
 }

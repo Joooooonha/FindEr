@@ -16,6 +16,7 @@ public record HospitalResponse(
         double distance,
         HospitalStatus status,
         Integer availableBeds,
+        boolean stale,
         String updatedAt,
         double lat,
         double lng,
@@ -32,6 +33,7 @@ public record HospitalResponse(
     ) {
         HospitalStatus status = bed != null ? bed.toStatus(staleThresholdMinutes) : HospitalStatus.UNKNOWN;
         Integer beds = bed != null ? bed.availableEmergencyBeds() : null;
+        boolean stale = bed == null || bed.isStale(staleThresholdMinutes);
         String updatedAt = bed != null && bed.updatedAt() != null ? bed.updatedAt().toString() : null;
         return new HospitalResponse(
                 info.id(),
@@ -41,6 +43,7 @@ public record HospitalResponse(
                 Math.round(distance * 10.0) / 10.0,
                 status,
                 beds,
+                stale,
                 updatedAt,
                 info.lat(),
                 info.lng(),

@@ -22,8 +22,7 @@ function toRelativeTime(isoString) {
 
 export default function HospitalItem({ hospital, isSelected, onClick }) {
   const hasCoords = Number.isFinite(hospital.lat) && Number.isFinite(hospital.lng)
-  const isUnknown = hospital.status === 'UNKNOWN'
-  const showBeds = !isUnknown && Number.isInteger(hospital.availableBeds) && hospital.availableBeds >= 0
+  const showBeds = Number.isInteger(hospital.availableBeds) && hospital.availableBeds >= 0
   const relativeTime = toRelativeTime(hospital.updatedAt)
 
   return (
@@ -56,7 +55,11 @@ export default function HospitalItem({ hospital, isSelected, onClick }) {
         ) : (
           <span style={{ color: '#9ca3af' }}>병상 정보 없음</span>
         )}
-        {relativeTime && <span style={{ color: '#9ca3af' }}>· {relativeTime} 갱신</span>}
+        {relativeTime && (
+          <span style={{ color: hospital.stale ? '#b45309' : '#9ca3af' }}>
+            · {hospital.stale ? '갱신 지연' : `${relativeTime} 갱신`}
+          </span>
+        )}
       </div>
 
       {hospital.blockMessages?.length > 0 && (
