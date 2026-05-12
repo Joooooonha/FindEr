@@ -1,4 +1,5 @@
 import HospitalItem from './HospitalItem'
+import HospitalDetailPanel from './HospitalDetailPanel'
 import LocationSearch from './LocationSearch'
 import TreatmentFilter from './TreatmentFilter'
 
@@ -9,7 +10,11 @@ export default function HospitalPanel({
   radius,
   onRadiusChange,
   selectedHospital,
+  selectedHospitalDetail,
+  detailLoading,
+  detailError,
   onSelect,
+  onCloseDetail,
   onLocate,
   isCustom,
   customLabel,
@@ -75,6 +80,13 @@ export default function HospitalPanel({
           {loading ? '검색 중...' : countText}
         </p>
       </div>
+
+      <HospitalDetailPanel
+        hospital={selectedHospitalDetail ?? selectedHospital}
+        loading={detailLoading}
+        error={detailError}
+        onClose={onCloseDetail}
+      />
 
       {/* 병원 목록 */}
       <div style={{ flex: 1, overflowY: 'auto' }}>

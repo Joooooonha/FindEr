@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import KakaoMap from '../components/KakaoMap'
 import HospitalPanel from '../components/HospitalPanel'
 import { matchesAllGroups } from '../components/TreatmentFilter'
-import { fetchHospitals } from '../api/hospital'
+import { fetchHospitalDetail, fetchHospitals } from '../api/hospital'
 
 const DEFAULT_LOCATION = { lat: 37.5665, lng: 126.9780 } // 서울 시청
 
@@ -13,6 +13,9 @@ export default function MapPage() {
   const [radius, setRadius] = useState(5)
   const [selectedTreatments, setSelectedTreatments] = useState([])
   const [selectedHospital, setSelectedHospital] = useState(null)
+  const [selectedHospitalDetail, setSelectedHospitalDetail] = useState(null)
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [detailError, setDetailError] = useState(null)
   const [loading, setLoading] = useState(false)
 
   const userLocation = customLocation ?? gpsLocation
@@ -51,6 +54,35 @@ export default function MapPage() {
     }
   }, [visibleHospitals, selectedHospital])
 
+  useEffect(() => {
+    if (!selectedHospital) {
+      setSelectedHospitalDetail(null)
+      setDetailError(null)
+      setDetailLoading(false)
+      return
+    }
+
+    let ignore = false
+    setSelectedHospitalDetail(null)
+    setDetailError(null)
+    setDetailLoading(true)
+
+    fetchHospitalDetail(selectedHospital.id)
+      .then(data => {
+        if (!ignore) setSelectedHospitalDetail(data)
+      })
+      .catch(() => {
+        if (!ignore) setDetailError('상세 정보를 불러오지 못했습니다.')
+      })
+      .finally(() => {
+        if (!ignore) setDetailLoading(false)
+      })
+
+    return () => {
+      ignore = true
+    }
+  }, [selectedHospital])
+
   if (!userLocation) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#6b7280', fontSize: '14px' }}>
@@ -68,7 +100,11 @@ export default function MapPage() {
         radius={radius}
         onRadiusChange={setRadius}
         selectedHospital={selectedHospital}
+        selectedHospitalDetail={selectedHospitalDetail}
+        detailLoading={detailLoading}
+        detailError={detailError}
         onSelect={setSelectedHospital}
+        onCloseDetail={() => setSelectedHospital(null)}
         onLocate={setCustomLocation}
         isCustom={Boolean(customLocation)}
         customLabel={customLocation?.label}

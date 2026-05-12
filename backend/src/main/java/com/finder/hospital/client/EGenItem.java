@@ -28,6 +28,7 @@ public class EGenItem {
     // 기본정보 API 가용 장비 여부 (Y/N)
     @JsonProperty("hvctayn")  private String hvctayn;   // CT 가용
     @JsonProperty("hvmriayn") private String hvmriayn;  // MRI 가용
+    @JsonProperty("hvventiayn") private String hvventiayn; // 인공호흡기 가용
     @JsonProperty("hpopyn")   private String hpopyn;    // 수술실 수 (0이면 불가)
 
     /** 위치조회/기본정보 API 모두 처리하는 위도 반환 */
