@@ -1,6 +1,5 @@
+import { BED_UPDATE_HELP } from '../constants/hospitalConstants'
 import StatusBadge from './StatusBadge'
-
-const BED_UPDATE_HELP = '병원에서 병상 정보를 마지막으로 업로드한 시각입니다.'
 
 /** 카카오맵 길찾기 URL 생성. 한글 이름 안전을 위해 encodeURIComponent 처리. */
 function buildKakaoDirectionsUrl(hospital) {

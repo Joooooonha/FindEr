@@ -1,3 +1,5 @@
+import { BED_UPDATE_HELP } from '../constants/hospitalConstants'
+import HelpBadge from './HelpBadge'
 import StatusBadge from './StatusBadge'
 
 const BED_ROWS = [
@@ -15,8 +17,6 @@ const EQUIPMENT_ROWS = [
   { key: 'ventilatorAvailable', label: '인공호흡기' },
   { key: 'surgeryAvailable', label: '응급 수술' },
 ]
-
-const BED_UPDATE_HELP = '병원에서 병상 정보를 마지막으로 업로드한 시각입니다.'
 
 function formatUpdatedAt(value) {
   if (!value) return '갱신 시각 없음'
@@ -41,31 +41,6 @@ function AvailabilityValue({ value }) {
   return (
     <span style={{ color: value ? '#166534' : '#9ca3af', fontWeight: 600 }}>
       {value ? '가능' : '확인 필요'}
-    </span>
-  )
-}
-
-function HelpBadge({ label }) {
-  return (
-    <span
-      aria-label={label}
-      title={label}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '16px',
-        height: '16px',
-        borderRadius: '50%',
-        border: '1px solid #cbd5e1',
-        color: '#64748b',
-        fontSize: '11px',
-        fontWeight: 700,
-        cursor: 'help',
-        lineHeight: 1,
-      }}
-    >
-      ?
     </span>
   )
 }
