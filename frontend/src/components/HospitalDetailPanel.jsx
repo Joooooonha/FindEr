@@ -16,6 +16,8 @@ const EQUIPMENT_ROWS = [
   { key: 'surgeryAvailable', label: '응급 수술' },
 ]
 
+const BED_UPDATE_HELP = '병원에서 병상 정보를 마지막으로 업로드한 시각입니다.'
+
 function formatUpdatedAt(value) {
   if (!value) return '갱신 시각 없음'
   const date = new Date(value)
@@ -39,6 +41,31 @@ function AvailabilityValue({ value }) {
   return (
     <span style={{ color: value ? '#166534' : '#9ca3af', fontWeight: 600 }}>
       {value ? '가능' : '확인 필요'}
+    </span>
+  )
+}
+
+function HelpBadge({ label }) {
+  return (
+    <span
+      aria-label={label}
+      title={label}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '16px',
+        height: '16px',
+        borderRadius: '50%',
+        border: '1px solid #cbd5e1',
+        color: '#64748b',
+        fontSize: '11px',
+        fontWeight: 700,
+        cursor: 'help',
+        lineHeight: 1,
+      }}
+    >
+      ?
     </span>
   )
 }
@@ -93,8 +120,9 @@ export default function HospitalDetailPanel({ hospital, loading, error, onClose 
           <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <StatusBadge status={hospital.status} />
             <span style={{ fontSize: '12px', color: hospital.stale ? '#b45309' : '#6b7280' }}>
-              {hospital.stale ? '갱신 지연' : '실시간 갱신'} · {formatUpdatedAt(hospital.updatedAt)}
+              병상 현황 업데이트: {formatUpdatedAt(hospital.updatedAt)}
             </span>
+            <HelpBadge label={BED_UPDATE_HELP} />
           </div>
 
           <div style={{ marginTop: '12px', fontSize: '13px', color: '#4b5563', lineHeight: 1.5 }}>
