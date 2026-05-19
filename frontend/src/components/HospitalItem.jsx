@@ -1,3 +1,4 @@
+import { BED_UPDATE_HELP } from '../constants/hospitalConstants'
 import StatusBadge from './StatusBadge'
 
 /** 카카오맵 길찾기 URL 생성. 한글 이름 안전을 위해 encodeURIComponent 처리. */
@@ -56,8 +57,8 @@ export default function HospitalItem({ hospital, isSelected, onClick }) {
           <span style={{ color: '#9ca3af' }}>병상 정보 없음</span>
         )}
         {relativeTime && (
-          <span style={{ color: hospital.stale ? '#b45309' : '#9ca3af' }}>
-            · {hospital.stale ? '갱신 지연' : `${relativeTime} 갱신`}
+          <span title={BED_UPDATE_HELP} style={{ color: hospital.stale ? '#b45309' : '#9ca3af', cursor: 'help' }}>
+            · 병상 업데이트 {relativeTime}
           </span>
         )}
       </div>

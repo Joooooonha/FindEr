@@ -1,3 +1,5 @@
+import { BED_UPDATE_HELP } from '../constants/hospitalConstants'
+import HelpBadge from './HelpBadge'
 import StatusBadge from './StatusBadge'
 
 const BED_ROWS = [
@@ -93,8 +95,9 @@ export default function HospitalDetailPanel({ hospital, loading, error, onClose 
           <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <StatusBadge status={hospital.status} />
             <span style={{ fontSize: '12px', color: hospital.stale ? '#b45309' : '#6b7280' }}>
-              {hospital.stale ? '갱신 지연' : '실시간 갱신'} · {formatUpdatedAt(hospital.updatedAt)}
+              병상 현황 업데이트: {formatUpdatedAt(hospital.updatedAt)}
             </span>
+            <HelpBadge label={BED_UPDATE_HELP} />
           </div>
 
           <div style={{ marginTop: '12px', fontSize: '13px', color: '#4b5563', lineHeight: 1.5 }}>
