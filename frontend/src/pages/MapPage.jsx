@@ -92,32 +92,31 @@ export default function MapPage() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100%' }}>
-      <HospitalPanel
-        hospitals={visibleHospitals}
-        totalCount={hospitals.length}
-        loading={loading}
-        radius={radius}
-        onRadiusChange={setRadius}
-        selectedHospital={selectedHospital}
-        selectedHospitalDetail={selectedHospitalDetail}
-        detailLoading={detailLoading}
-        detailError={detailError}
-        onSelect={setSelectedHospital}
-        onCloseDetail={() => setSelectedHospital(null)}
-        onLocate={setCustomLocation}
-        isCustom={Boolean(customLocation)}
-        customLabel={customLocation?.label}
-        onResetToGps={() => setCustomLocation(null)}
-        selectedTreatments={selectedTreatments}
-        onTreatmentsChange={setSelectedTreatments}
-      />
+    <HospitalPanel
+      hospitals={visibleHospitals}
+      totalCount={hospitals.length}
+      loading={loading}
+      radius={radius}
+      onRadiusChange={setRadius}
+      selectedHospital={selectedHospital}
+      selectedHospitalDetail={selectedHospitalDetail}
+      detailLoading={detailLoading}
+      detailError={detailError}
+      onSelect={setSelectedHospital}
+      onCloseDetail={() => setSelectedHospital(null)}
+      onLocate={setCustomLocation}
+      isCustom={Boolean(customLocation)}
+      customLabel={customLocation?.label}
+      onResetToGps={() => setCustomLocation(null)}
+      selectedTreatments={selectedTreatments}
+      onTreatmentsChange={setSelectedTreatments}
+    >
       <KakaoMap
         userLocation={userLocation}
         hospitals={visibleHospitals}
         selectedHospital={selectedHospital}
         onHospitalClick={setSelectedHospital}
       />
-    </div>
+    </HospitalPanel>
   )
 }

@@ -54,16 +54,83 @@ body {
   margin: 0;
 }
 
+body,
+button,
+input {
+  font-family: var(--sans);
+}
+
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  text-align: left;
+  border-inline: none;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+}
+
+.finder-map-layout {
+  display: grid;
+  grid-template-columns: 360px minmax(420px, 1fr) 420px;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.finder-control-panel,
+.finder-results-panel {
+  height: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  z-index: 10;
+}
+
+.finder-control-panel {
+  border-right: 1px solid #e5e7eb;
+}
+
+.finder-results-panel {
+  border-left: 1px solid #e5e7eb;
+}
+
+.finder-map-pane {
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+}
+
+@media (max-width: 1180px) {
+  .finder-map-layout {
+    grid-template-columns: 320px minmax(360px, 1fr) 360px;
+  }
+
+  .finder-map-pane {
+    min-width: 360px;
+  }
+}
+
+@media (max-width: 900px) {
+  .finder-map-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(360px, 52vh) minmax(360px, 1fr);
+    overflow: auto;
+  }
+
+  .finder-control-panel,
+  .finder-results-panel {
+    height: auto;
+    border-inline: none;
+  }
+
+  .finder-map-pane {
+    min-height: 360px;
+  }
 }
 
 h1,
