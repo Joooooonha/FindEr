@@ -2,6 +2,7 @@ import HospitalItem from './HospitalItem'
 import HospitalDetailPanel from './HospitalDetailPanel'
 import LocationSearch from './LocationSearch'
 import TreatmentFilter from './TreatmentFilter'
+import styles from './HospitalPanel.module.css'
 
 export default function HospitalPanel({
   hospitals,
@@ -31,19 +32,19 @@ export default function HospitalPanel({
   return (
     <div className="finder-map-layout">
       <aside className="finder-control-panel">
-        <div style={{ padding: '18px 18px 16px', borderBottom: '1px solid #e5e7eb' }}>
-          <p style={{ fontSize: '16px', fontWeight: 700, color: '#111827' }}>내 주변 응급실</p>
+        <div className={styles.panelHeader}>
+          <p className={styles.panelTitle}>내 주변 응급실</p>
           {isCustom && customLabel && (
-            <p style={{ fontSize: '12px', color: '#3b82f6', marginTop: '4px' }}>📍 {customLabel} 기준</p>
+            <p className={styles.customLocationLabel}>📍 {customLabel} 기준</p>
           )}
         </div>
 
         <LocationSearch onLocate={onLocate} isCustom={isCustom} onResetToGps={onResetToGps} />
 
-        <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <p style={{ fontSize: '12px', color: '#9ca3af' }}>검색 반경</p>
-            <p style={{ fontSize: '13px', color: '#3b82f6', fontWeight: 600 }}>{radius}km</p>
+        <div className={styles.sliderSection}>
+          <div className={styles.sliderHeader}>
+            <p className={styles.sliderLabel}>검색 반경</p>
+            <p className={styles.sliderValue}>{radius}km</p>
           </div>
           <input
             type="range"
@@ -53,9 +54,9 @@ export default function HospitalPanel({
             value={radius}
             onChange={e => onRadiusChange(Number(e.target.value))}
             aria-label="검색 반경"
-            style={{ width: '100%', accentColor: '#3b82f6', cursor: 'pointer' }}
+            className={styles.rangeInput}
           />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>
+          <div className={styles.rangeLimits}>
             <span>1km</span>
             <span>20km</span>
           </div>
@@ -69,14 +70,14 @@ export default function HospitalPanel({
       </main>
 
       <aside className="finder-results-panel">
-        <div style={{ padding: '16px 18px', borderBottom: '1px solid #e5e7eb', background: '#fff' }}>
-          <p style={{ fontSize: '13px', fontWeight: 700, color: '#111827' }}>응급실 정보</p>
-          <p style={{ marginTop: '3px', fontSize: '12px', color: '#6b7280' }}>
+        <div className={styles.resultsHeader}>
+          <p className={styles.resultsTitle}>응급실 정보</p>
+          <p className={styles.resultsCount}>
             {loading ? '검색 중...' : countText}
           </p>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div className={styles.scrollableContent}>
           <HospitalDetailPanel
             hospital={selectedHospitalDetail ?? selectedHospital}
             loading={detailLoading}
@@ -85,17 +86,17 @@ export default function HospitalPanel({
           />
 
           {selectedHospital && (
-            <div style={{ padding: '2px 18px 10px' }}>
-              <p style={{ fontSize: '12px', color: '#9ca3af' }}>주변 응급실 목록</p>
+            <div className={styles.sectionLabel}>
+              <p className={styles.sectionLabelText}>주변 응급실 목록</p>
             </div>
           )}
 
           {loading ? (
-            <div style={{ padding: '40px 18px', textAlign: 'center', color: '#9ca3af', fontSize: '14px' }}>
+            <div className={styles.emptyState}>
               불러오는 중...
             </div>
           ) : hospitals.length === 0 ? (
-            <div style={{ padding: '40px 18px', textAlign: 'center', color: '#9ca3af', fontSize: '14px' }}>
+            <div className={styles.emptyState}>
               {filtered ? '선택한 시술이 가능한 응급실이 없습니다' : '주변 응급실이 없습니다'}
             </div>
           ) : (

@@ -1,0 +1,92 @@
+.panelHeader {
+  padding: 18px 18px 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.panelTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.customLocationLabel {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #3b82f6;
+}
+
+.sliderSection {
+  padding: 14px 18px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.sliderHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.sliderLabel {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.sliderValue {
+  font-size: 13px;
+  font-weight: 600;
+  color: #3b82f6;
+}
+
+.rangeInput {
+  width: 100%;
+  accent-color: #3b82f6;
+  cursor: pointer;
+}
+
+.rangeLimits {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2px;
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.resultsHeader {
+  padding: 16px 18px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.resultsTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.resultsCount {
+  margin-top: 3px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.scrollableContent {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.sectionLabel {
+  padding: 2px 18px 10px;
+}
+
+.sectionLabelText {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.emptyState {
+  padding: 40px 18px;
+  text-align: center;
+  font-size: 14px;
+  color: #9ca3af;
+}
