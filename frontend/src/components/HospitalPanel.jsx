@@ -170,7 +170,7 @@ export default function HospitalPanel({
             </div>
           ) : hospitals.length === 0 ? (
             <div className={styles.emptyState}>
-              {filtered ? '선택한 시술이 가능한 응급실이 없습니다' : '주변 응급실이 없습니다'}
+              {filtered ? '선택한 조건에 맞는 응급실이 없습니다' : '주변 응급실이 없습니다'}
             </div>
           ) : (
             hospitals.map(h => (

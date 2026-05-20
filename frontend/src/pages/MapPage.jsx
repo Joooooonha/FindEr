@@ -79,16 +79,32 @@ export default function MapPage() {
   // 위치/반경 변경 시 병원 조회. 새 목록에 없는 병원이 선택 상태로 남지 않도록 초기화.
   useEffect(() => {
     if (!userLocation) return
-    setSelectedHospital(null)
     setLoading(true)
+    let cancelled = false
+
     fetchHospitals(userLocation.lat, userLocation.lng, radius)
       .then(data => {
+        if (cancelled) return
         setHospitals(data.hospitals || [])
         setLastFetchedAt(new Date())
       })
-      .catch(() => setHospitals([]))
-      .finally(() => setLoading(false))
+      .catch(() => {
+        if (cancelled) return
+        setHospitals([])
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
   }, [userLocation, radius, refreshKey])
+
+  useEffect(() => {
+    if (!userLocation) return
+    setSelectedHospital(null)
+  }, [userLocation, radius])
 
   // 선택된 증상/목록 필터와 정렬 조건에 따라 병원 목록을 계산한다.
   const visibleHospitals = useMemo(() => {
