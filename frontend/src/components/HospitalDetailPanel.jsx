@@ -45,28 +45,33 @@ function AvailabilityValue({ value }) {
   )
 }
 
-export default function HospitalDetailPanel({ hospital, loading, error, onClose }) {
+export default function HospitalDetailPanel({ hospital, loading, error, onClose, embedded = false }) {
   if (!hospital && !loading) return null
 
   return (
     <section style={{
-      margin: '12px',
+      margin: embedded ? '10px 0 0' : '12px',
       padding: '14px',
       border: '1px solid #e5e7eb',
       borderRadius: '8px',
-      background: '#fff',
-      boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)',
+      background: embedded ? '#f8fafc' : '#fff',
+      boxShadow: embedded ? 'none' : '0 4px 12px rgba(15, 23, 42, 0.08)',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'flex-start' }}>
         <div style={{ minWidth: 0 }}>
-          <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '3px' }}>선택한 병원</p>
+          <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '3px' }}>
+            {embedded ? '상세 정보' : '선택한 병원'}
+          </p>
           <h2 style={{ fontSize: '16px', lineHeight: 1.35, color: '#111827' }}>
             {hospital?.name ?? '상세 정보 불러오는 중'}
           </h2>
         </div>
         <button
           type="button"
-          onClick={onClose}
+          onClick={e => {
+            e.stopPropagation()
+            onClose?.()
+          }}
           aria-label="상세 패널 닫기"
           style={{
             width: '28px',
