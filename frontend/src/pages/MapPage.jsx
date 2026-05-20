@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import KakaoMap from '../components/KakaoMap'
 import HospitalPanel from '../components/HospitalPanel'
 import { matchesAllGroups } from '../components/TreatmentFilter'
@@ -49,6 +49,7 @@ function sortHospitals(hospitals, sortBy) {
 }
 
 export default function MapPage() {
+  const inflightDetailIdsRef = useRef(new Set())
   const [gpsLocation, setGpsLocation] = useState(null)
   const [customLocation, setCustomLocation] = useState(null)
   const [hospitals, setHospitals] = useState([])
@@ -106,6 +107,10 @@ export default function MapPage() {
     if (!userLocation) return
     setSelectedHospital(null)
     setExpandedHospitalIds([])
+    setHospitalDetails({})
+    setDetailLoadingById({})
+    setDetailErrorById({})
+    inflightDetailIdsRef.current.clear()
   }, [userLocation, radius])
 
   // 선택된 증상/목록 필터와 정렬 조건에 따라 병원 목록을 계산한다.
@@ -131,7 +136,8 @@ export default function MapPage() {
 
   const loadHospitalDetail = (hospitalId) => {
     const id = String(hospitalId)
-    if (hospitalDetails[id] || detailLoadingById[id]) return
+    if (hospitalDetails[id] || inflightDetailIdsRef.current.has(id)) return
+    inflightDetailIdsRef.current.add(id)
 
     setDetailLoadingById(prev => ({ ...prev, [id]: true }))
     setDetailErrorById(prev => ({ ...prev, [id]: null }))
@@ -144,6 +150,7 @@ export default function MapPage() {
         setDetailErrorById(prev => ({ ...prev, [id]: '상세 정보를 불러오지 못했습니다.' }))
       })
       .finally(() => {
+        inflightDetailIdsRef.current.delete(id)
         setDetailLoadingById(prev => ({ ...prev, [id]: false }))
       })
   }
@@ -165,6 +172,12 @@ export default function MapPage() {
 
   const handleSearchCurrentLocation = () => {
     setCustomLocation(null)
+    setSelectedHospital(null)
+    setExpandedHospitalIds([])
+    setHospitalDetails({})
+    setDetailLoadingById({})
+    setDetailErrorById({})
+    inflightDetailIdsRef.current.clear()
     setRefreshKey(key => key + 1)
   }
 

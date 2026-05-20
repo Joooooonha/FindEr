@@ -169,7 +169,7 @@ export default function HospitalPanel({
                 detailLoading={Boolean(detailLoadingById[String(h.id)])}
                 detailError={detailErrorById[String(h.id)]}
                 onClick={() => onSelect(h)}
-                onCloseDetail={() => onCloseDetail(h.id)}
+                onCloseDetail={() => onCloseDetail(String(h.id))}
               />
             ))
           )}
