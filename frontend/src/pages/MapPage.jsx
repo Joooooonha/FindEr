@@ -5,6 +5,48 @@ import { matchesAllGroups } from '../components/TreatmentFilter'
 import { fetchHospitalDetail, fetchHospitals } from '../api/hospital'
 
 const DEFAULT_LOCATION = { lat: 37.5665, lng: 126.9780 } // 서울 시청
+const UPDATE_WINDOW_HOURS = {
+  all: null,
+  '1': 1,
+  '3': 3,
+  '6': 6,
+  '12': 12,
+}
+
+function getUpdatedTime(hospital) {
+  const time = new Date(hospital.updatedAt).getTime()
+  return Number.isNaN(time) ? 0 : time
+}
+
+function hasAvailableBeds(hospital) {
+  return Number.isInteger(hospital.availableBeds) && hospital.availableBeds > 0
+}
+
+function isUpdatedWithin(hospital, hours) {
+  if (!hours) return true
+  const updatedAt = getUpdatedTime(hospital)
+  if (!updatedAt) return false
+  return Date.now() - updatedAt <= hours * 60 * 60 * 1000
+}
+
+function sortHospitals(hospitals, sortBy) {
+  const sorted = [...hospitals]
+  sorted.sort((a, b) => {
+    if (sortBy === 'beds') {
+      const aBeds = Number.isInteger(a.availableBeds) ? a.availableBeds : -1
+      const bBeds = Number.isInteger(b.availableBeds) ? b.availableBeds : -1
+      if (bBeds !== aBeds) return bBeds - aBeds
+    }
+
+    if (sortBy === 'updated') {
+      const diff = getUpdatedTime(b) - getUpdatedTime(a)
+      if (diff !== 0) return diff
+    }
+
+    return Number(a.distance ?? Infinity) - Number(b.distance ?? Infinity)
+  })
+  return sorted
+}
 
 export default function MapPage() {
   const [gpsLocation, setGpsLocation] = useState(null)
@@ -17,6 +59,11 @@ export default function MapPage() {
   const [detailLoading, setDetailLoading] = useState(false)
   const [detailError, setDetailError] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [sortBy, setSortBy] = useState('distance')
+  const [onlyAvailableBeds, setOnlyAvailableBeds] = useState(false)
+  const [updateWindow, setUpdateWindow] = useState('all')
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [lastFetchedAt, setLastFetchedAt] = useState(null)
 
   const userLocation = customLocation ?? gpsLocation
 
@@ -35,16 +82,26 @@ export default function MapPage() {
     setSelectedHospital(null)
     setLoading(true)
     fetchHospitals(userLocation.lat, userLocation.lng, radius)
-      .then(data => setHospitals(data.hospitals || []))
+      .then(data => {
+        setHospitals(data.hospitals || [])
+        setLastFetchedAt(new Date())
+      })
       .catch(() => setHospitals([]))
       .finally(() => setLoading(false))
-  }, [userLocation, radius])
+  }, [userLocation, radius, refreshKey])
 
-  // 선택된 증상 필터에 따라 병원 목록 필터링
+  // 선택된 증상/목록 필터와 정렬 조건에 따라 병원 목록을 계산한다.
   const visibleHospitals = useMemo(() => {
-    if (selectedTreatments.length === 0) return hospitals
-    return hospitals.filter(h => matchesAllGroups(h.availableTreatments, selectedTreatments))
-  }, [hospitals, selectedTreatments])
+    const updateHours = UPDATE_WINDOW_HOURS[updateWindow]
+    const filtered = hospitals.filter(hospital => {
+      const treatmentMatched = selectedTreatments.length === 0
+        || matchesAllGroups(hospital.availableTreatments, selectedTreatments)
+      const bedMatched = !onlyAvailableBeds || hasAvailableBeds(hospital)
+      const updateMatched = isUpdatedWithin(hospital, updateHours)
+      return treatmentMatched && bedMatched && updateMatched
+    })
+    return sortHospitals(filtered, sortBy)
+  }, [hospitals, selectedTreatments, onlyAvailableBeds, updateWindow, sortBy])
 
   // 필터링 결과에 선택된 병원이 빠지면 선택을 해제한다.
   useEffect(() => {
@@ -110,6 +167,14 @@ export default function MapPage() {
       onResetToGps={() => setCustomLocation(null)}
       selectedTreatments={selectedTreatments}
       onTreatmentsChange={setSelectedTreatments}
+      sortBy={sortBy}
+      onSortChange={setSortBy}
+      onlyAvailableBeds={onlyAvailableBeds}
+      onOnlyAvailableBedsChange={setOnlyAvailableBeds}
+      updateWindow={updateWindow}
+      onUpdateWindowChange={setUpdateWindow}
+      onRefresh={() => setRefreshKey(key => key + 1)}
+      lastFetchedAt={lastFetchedAt}
     >
       <KakaoMap
         userLocation={userLocation}

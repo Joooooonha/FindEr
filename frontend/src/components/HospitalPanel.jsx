@@ -4,6 +4,14 @@ import LocationSearch from './LocationSearch'
 import TreatmentFilter from './TreatmentFilter'
 import styles from './HospitalPanel.module.css'
 
+function formatLastFetchedAt(value) {
+  if (!value) return '아직 조회 전'
+  return value.toLocaleTimeString('ko-KR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 export default function HospitalPanel({
   hospitals,
   totalCount,
@@ -22,9 +30,17 @@ export default function HospitalPanel({
   onResetToGps,
   selectedTreatments,
   onTreatmentsChange,
+  sortBy,
+  onSortChange,
+  onlyAvailableBeds,
+  onOnlyAvailableBedsChange,
+  updateWindow,
+  onUpdateWindowChange,
+  onRefresh,
+  lastFetchedAt,
   children,
 }) {
-  const filtered = selectedTreatments?.length > 0
+  const filtered = hospitals.length !== totalCount
   const countText = filtered
     ? `${hospitals.length}개 매칭 (전체 ${totalCount}개 중)`
     : `${hospitals.length}개 응급실`
@@ -66,6 +82,24 @@ export default function HospitalPanel({
       </aside>
 
       <main className="finder-map-pane">
+        <div className={styles.mapToolbar}>
+          <div>
+            <p className={styles.mapToolbarTitle}>
+              {isCustom && customLabel ? `${customLabel} 기준` : '현재 위치 기준'}
+            </p>
+            <p className={styles.mapToolbarMeta}>
+              반경 {radius}km · {countText} · 마지막 조회 {formatLastFetchedAt(lastFetchedAt)}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onRefresh}
+            disabled={loading}
+            className={styles.refreshButton}
+          >
+            {loading ? '갱신 중' : '응급실 갱신'}
+          </button>
+        </div>
         {children}
       </main>
 
@@ -75,6 +109,45 @@ export default function HospitalPanel({
           <p className={styles.resultsCount}>
             {loading ? '검색 중...' : countText}
           </p>
+        </div>
+
+        <div className={styles.resultsControls}>
+          <label className={styles.controlField}>
+            <span className={styles.controlLabel}>정렬</span>
+            <select
+              value={sortBy}
+              onChange={e => onSortChange(e.target.value)}
+              className={styles.selectControl}
+            >
+              <option value="distance">거리순</option>
+              <option value="beds">병상 많은 순</option>
+              <option value="updated">업데이트 최신순</option>
+            </select>
+          </label>
+
+          <label className={styles.controlField}>
+            <span className={styles.controlLabel}>최근 업데이트</span>
+            <select
+              value={updateWindow}
+              onChange={e => onUpdateWindowChange(e.target.value)}
+              className={styles.selectControl}
+            >
+              <option value="all">전체</option>
+              <option value="1">1시간 이내</option>
+              <option value="3">3시간 이내</option>
+              <option value="6">6시간 이내</option>
+              <option value="12">12시간 이내</option>
+            </select>
+          </label>
+
+          <label className={styles.checkboxControl}>
+            <input
+              type="checkbox"
+              checked={onlyAvailableBeds}
+              onChange={e => onOnlyAvailableBedsChange(e.target.checked)}
+            />
+            <span>가용 병상 있음</span>
+          </label>
         </div>
 
         <div className={styles.scrollableContent}>
