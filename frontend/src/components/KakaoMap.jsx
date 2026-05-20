@@ -7,6 +7,11 @@ const STATUS_COLORS = {
   UNKNOWN: '#94a3b8',
 }
 
+function getBedLabel(hospital) {
+  if (!Number.isInteger(hospital.availableBeds) || hospital.availableBeds < 0) return '?'
+  return String(hospital.availableBeds)
+}
+
 export default function KakaoMap({ userLocation, hospitals, selectedHospital, onHospitalClick }) {
   const containerRef = useRef(null)
   const mapRef = useRef(null)
@@ -52,22 +57,33 @@ export default function KakaoMap({ userLocation, hospitals, selectedHospital, on
     hospitals.forEach(hospital => {
       const position = new kakao.maps.LatLng(hospital.lat, hospital.lng)
       const color = STATUS_COLORS[hospital.status] || STATUS_COLORS.UNKNOWN
+      const selected = selectedHospital?.id === hospital.id
 
-      const dot = document.createElement('div')
-      dot.style.cssText = `
-        width: 14px; height: 14px;
+      const marker = document.createElement('button')
+      marker.type = 'button'
+      marker.title = `${hospital.name} · 응급실 병상 ${getBedLabel(hospital)}개`
+      marker.style.cssText = `
+        min-width: ${selected ? '34px' : '28px'};
+        height: ${selected ? '34px' : '28px'};
+        padding: 0 7px;
         background: ${color};
-        border-radius: 50%;
-        border: 2px solid white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        border-radius: 999px;
+        border: ${selected ? '3px solid #111827' : '2px solid white'};
+        box-shadow: 0 3px 8px rgba(15,23,42,0.28);
         cursor: pointer;
+        color: white;
+        font-size: ${selected ? '13px' : '12px'};
+        font-weight: 800;
+        line-height: 1;
+        text-align: center;
       `
-      dot.addEventListener('click', () => onHospitalClick(hospital))
+      marker.textContent = getBedLabel(hospital)
+      marker.addEventListener('click', () => onHospitalClick(hospital))
 
-      const overlay = new kakao.maps.CustomOverlay({ position, content: dot, map: mapRef.current })
+      const overlay = new kakao.maps.CustomOverlay({ position, content: marker, map: mapRef.current })
       overlaysRef.current.push(overlay)
     })
-  }, [hospitals, onHospitalClick])
+  }, [hospitals, selectedHospital, onHospitalClick])
 
   // 선택된 병원으로 지도 이동
   useEffect(() => {
