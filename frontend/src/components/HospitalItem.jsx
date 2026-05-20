@@ -1,4 +1,5 @@
 import { BED_UPDATE_HELP } from '../constants/hospitalConstants'
+import HospitalDetailPanel from './HospitalDetailPanel'
 import StatusBadge from './StatusBadge'
 
 /** 카카오맵 길찾기 URL 생성. 한글 이름 안전을 위해 encodeURIComponent 처리. */
@@ -21,7 +22,16 @@ function toRelativeTime(isoString) {
   return updated.toLocaleDateString('ko-KR')
 }
 
-export default function HospitalItem({ hospital, isSelected, onClick }) {
+export default function HospitalItem({
+  hospital,
+  isSelected,
+  isExpanded,
+  detail,
+  detailLoading,
+  detailError,
+  onClick,
+  onCloseDetail,
+}) {
   const hasCoords = Number.isFinite(hospital.lat) && Number.isFinite(hospital.lng)
   const showBeds = Number.isInteger(hospital.availableBeds) && hospital.availableBeds >= 0
   const relativeTime = toRelativeTime(hospital.updatedAt)
@@ -96,6 +106,18 @@ export default function HospitalItem({ hospital, isSelected, onClick }) {
           </a>
         )}
       </div>
+
+      {isExpanded && (
+        <div onClick={e => e.stopPropagation()}>
+          <HospitalDetailPanel
+            hospital={detail ?? hospital}
+            loading={detailLoading}
+            error={detailError}
+            onClose={onCloseDetail}
+            embedded
+          />
+        </div>
+      )}
     </div>
   )
 }

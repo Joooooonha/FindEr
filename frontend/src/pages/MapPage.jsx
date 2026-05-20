@@ -55,9 +55,10 @@ export default function MapPage() {
   const [radius, setRadius] = useState(5)
   const [selectedTreatments, setSelectedTreatments] = useState([])
   const [selectedHospital, setSelectedHospital] = useState(null)
-  const [selectedHospitalDetail, setSelectedHospitalDetail] = useState(null)
-  const [detailLoading, setDetailLoading] = useState(false)
-  const [detailError, setDetailError] = useState(null)
+  const [expandedHospitalIds, setExpandedHospitalIds] = useState([])
+  const [hospitalDetails, setHospitalDetails] = useState({})
+  const [detailLoadingById, setDetailLoadingById] = useState({})
+  const [detailErrorById, setDetailErrorById] = useState({})
   const [loading, setLoading] = useState(false)
   const [sortBy, setSortBy] = useState('distance')
   const [onlyAvailableBeds, setOnlyAvailableBeds] = useState(false)
@@ -104,6 +105,7 @@ export default function MapPage() {
   useEffect(() => {
     if (!userLocation) return
     setSelectedHospital(null)
+    setExpandedHospitalIds([])
   }, [userLocation, radius])
 
   // 선택된 증상/목록 필터와 정렬 조건에 따라 병원 목록을 계산한다.
@@ -127,34 +129,44 @@ export default function MapPage() {
     }
   }, [visibleHospitals, selectedHospital])
 
-  useEffect(() => {
-    if (!selectedHospital) {
-      setSelectedHospitalDetail(null)
-      setDetailError(null)
-      setDetailLoading(false)
-      return
-    }
+  const loadHospitalDetail = (hospitalId) => {
+    const id = String(hospitalId)
+    if (hospitalDetails[id] || detailLoadingById[id]) return
 
-    let ignore = false
-    setSelectedHospitalDetail(null)
-    setDetailError(null)
-    setDetailLoading(true)
+    setDetailLoadingById(prev => ({ ...prev, [id]: true }))
+    setDetailErrorById(prev => ({ ...prev, [id]: null }))
 
-    fetchHospitalDetail(selectedHospital.id)
+    fetchHospitalDetail(id)
       .then(data => {
-        if (!ignore) setSelectedHospitalDetail(data)
+        setHospitalDetails(prev => ({ ...prev, [id]: data }))
       })
       .catch(() => {
-        if (!ignore) setDetailError('상세 정보를 불러오지 못했습니다.')
+        setDetailErrorById(prev => ({ ...prev, [id]: '상세 정보를 불러오지 못했습니다.' }))
       })
       .finally(() => {
-        if (!ignore) setDetailLoading(false)
+        setDetailLoadingById(prev => ({ ...prev, [id]: false }))
       })
+  }
 
-    return () => {
-      ignore = true
-    }
-  }, [selectedHospital])
+  const handleHospitalSelect = (hospital) => {
+    const id = String(hospital.id)
+    const alreadyExpanded = expandedHospitalIds.includes(id)
+    setSelectedHospital(hospital)
+    setExpandedHospitalIds(prev => (
+      alreadyExpanded ? prev.filter(expandedId => expandedId !== id) : [...prev, id]
+    ))
+    if (!alreadyExpanded) loadHospitalDetail(id)
+  }
+
+  const handleCloseHospitalDetail = (hospitalId) => {
+    const id = String(hospitalId)
+    setExpandedHospitalIds(prev => prev.filter(expandedId => expandedId !== id))
+  }
+
+  const handleSearchCurrentLocation = () => {
+    setCustomLocation(null)
+    setRefreshKey(key => key + 1)
+  }
 
   if (!userLocation) {
     return (
@@ -172,11 +184,8 @@ export default function MapPage() {
       radius={radius}
       onRadiusChange={setRadius}
       selectedHospital={selectedHospital}
-      selectedHospitalDetail={selectedHospitalDetail}
-      detailLoading={detailLoading}
-      detailError={detailError}
-      onSelect={setSelectedHospital}
-      onCloseDetail={() => setSelectedHospital(null)}
+      onSelect={handleHospitalSelect}
+      onCloseDetail={handleCloseHospitalDetail}
       onLocate={setCustomLocation}
       isCustom={Boolean(customLocation)}
       customLabel={customLocation?.label}
@@ -189,14 +198,18 @@ export default function MapPage() {
       onOnlyAvailableBedsChange={setOnlyAvailableBeds}
       updateWindow={updateWindow}
       onUpdateWindowChange={setUpdateWindow}
-      onRefresh={() => setRefreshKey(key => key + 1)}
+      onSearchCurrentLocation={handleSearchCurrentLocation}
       lastFetchedAt={lastFetchedAt}
+      expandedHospitalIds={expandedHospitalIds}
+      hospitalDetails={hospitalDetails}
+      detailLoadingById={detailLoadingById}
+      detailErrorById={detailErrorById}
     >
       <KakaoMap
         userLocation={userLocation}
         hospitals={visibleHospitals}
         selectedHospital={selectedHospital}
-        onHospitalClick={setSelectedHospital}
+        onHospitalClick={handleHospitalSelect}
       />
     </HospitalPanel>
   )

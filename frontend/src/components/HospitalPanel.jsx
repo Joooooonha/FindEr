@@ -1,5 +1,4 @@
 import HospitalItem from './HospitalItem'
-import HospitalDetailPanel from './HospitalDetailPanel'
 import LocationSearch from './LocationSearch'
 import TreatmentFilter from './TreatmentFilter'
 import styles from './HospitalPanel.module.css'
@@ -19,9 +18,6 @@ export default function HospitalPanel({
   radius,
   onRadiusChange,
   selectedHospital,
-  selectedHospitalDetail,
-  detailLoading,
-  detailError,
   onSelect,
   onCloseDetail,
   onLocate,
@@ -36,8 +32,12 @@ export default function HospitalPanel({
   onOnlyAvailableBedsChange,
   updateWindow,
   onUpdateWindowChange,
-  onRefresh,
+  onSearchCurrentLocation,
   lastFetchedAt,
+  expandedHospitalIds,
+  hospitalDetails,
+  detailLoadingById,
+  detailErrorById,
   children,
 }) {
   const filtered = hospitals.length !== totalCount
@@ -56,6 +56,23 @@ export default function HospitalPanel({
         </div>
 
         <LocationSearch onLocate={onLocate} isCustom={isCustom} onResetToGps={onResetToGps} />
+
+        <div className={styles.searchMetaBox}>
+          <p className={styles.searchMetaTitle}>
+            {isCustom && customLabel ? `${customLabel} 기준` : '현재 위치 기준'}
+          </p>
+          <p className={styles.searchMetaText}>
+            반경 {radius}km · {countText} · 마지막 조회 {formatLastFetchedAt(lastFetchedAt)}
+          </p>
+          <button
+            type="button"
+            onClick={onSearchCurrentLocation}
+            disabled={loading}
+            className={styles.currentSearchButton}
+          >
+            {loading ? '검색 중' : '현위치에서 검색'}
+          </button>
+        </div>
 
         <div className={styles.sliderSection}>
           <div className={styles.sliderHeader}>
@@ -82,24 +99,6 @@ export default function HospitalPanel({
       </aside>
 
       <main className="finder-map-pane">
-        <div className={styles.mapToolbar}>
-          <div>
-            <p className={styles.mapToolbarTitle}>
-              {isCustom && customLabel ? `${customLabel} 기준` : '현재 위치 기준'}
-            </p>
-            <p className={styles.mapToolbarMeta}>
-              반경 {radius}km · {countText} · 마지막 조회 {formatLastFetchedAt(lastFetchedAt)}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onRefresh}
-            disabled={loading}
-            className={styles.refreshButton}
-          >
-            {loading ? '갱신 중' : '응급실 갱신'}
-          </button>
-        </div>
         {children}
       </main>
 
@@ -151,19 +150,6 @@ export default function HospitalPanel({
         </div>
 
         <div className={styles.scrollableContent}>
-          <HospitalDetailPanel
-            hospital={selectedHospitalDetail ?? selectedHospital}
-            loading={detailLoading}
-            error={detailError}
-            onClose={onCloseDetail}
-          />
-
-          {selectedHospital && (
-            <div className={styles.sectionLabel}>
-              <p className={styles.sectionLabelText}>주변 응급실 목록</p>
-            </div>
-          )}
-
           {loading ? (
             <div className={styles.emptyState}>
               불러오는 중...
@@ -178,7 +164,12 @@ export default function HospitalPanel({
                 key={h.id}
                 hospital={h}
                 isSelected={selectedHospital?.id === h.id}
+                isExpanded={expandedHospitalIds.includes(String(h.id))}
+                detail={hospitalDetails[String(h.id)]}
+                detailLoading={Boolean(detailLoadingById[String(h.id)])}
+                detailError={detailErrorById[String(h.id)]}
                 onClick={() => onSelect(h)}
+                onCloseDetail={() => onCloseDetail(h.id)}
               />
             ))
           )}
