@@ -147,23 +147,3 @@
   font-size: 11px;
   color: #6b7280;
 }
-
-.currentSearchButton {
-  width: 100%;
-  margin-top: 9px;
-  padding: 8px 10px;
-  border: 1px solid #bfdbfe;
-  border-radius: 6px;
-  background: #eff6ff;
-  color: #2563eb;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.currentSearchButton:disabled {
-  color: #9ca3af;
-  cursor: not-allowed;
-  background: #f3f4f6;
-  border-color: #e5e7eb;
-}

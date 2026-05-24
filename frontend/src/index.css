@@ -106,6 +106,31 @@ input {
   position: relative;
 }
 
+.map-research-button {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  z-index: 20;
+  transform: translateX(-50%);
+  padding: 10px 16px;
+  border: 1px solid #1d4ed8;
+  border-radius: 999px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+  cursor: pointer;
+}
+
+.map-research-button:disabled {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
 @media (max-width: 1180px) {
   .finder-map-layout {
     grid-template-columns: 320px minmax(360px, 1fr) 360px;

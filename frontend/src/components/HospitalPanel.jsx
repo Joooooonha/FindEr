@@ -32,7 +32,6 @@ export default function HospitalPanel({
   onOnlyAvailableBedsChange,
   updateWindow,
   onUpdateWindowChange,
-  onSearchCurrentLocation,
   lastFetchedAt,
   expandedHospitalIds,
   hospitalDetails,
@@ -64,14 +63,6 @@ export default function HospitalPanel({
           <p className={styles.searchMetaText}>
             반경 {radius}km · {countText} · 마지막 조회 {formatLastFetchedAt(lastFetchedAt)}
           </p>
-          <button
-            type="button"
-            onClick={onSearchCurrentLocation}
-            disabled={loading}
-            className={styles.currentSearchButton}
-          >
-            {loading ? '검색 중' : '현위치에서 검색'}
-          </button>
         </div>
 
         <div className={styles.sliderSection}>

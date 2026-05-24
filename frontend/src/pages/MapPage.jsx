@@ -12,6 +12,20 @@ const UPDATE_WINDOW_HOURS = {
   '6': 6,
   '12': 12,
 }
+const MAP_RESEARCH_THRESHOLD_METERS = 80
+
+function getDistanceMeters(a, b) {
+  if (!a || !b) return 0
+  const toRad = value => (value * Math.PI) / 180
+  const earthRadius = 6371000
+  const lat1 = toRad(a.lat)
+  const lat2 = toRad(b.lat)
+  const dLat = toRad(b.lat - a.lat)
+  const dLng = toRad(b.lng - a.lng)
+  const h = Math.sin(dLat / 2) ** 2
+    + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2
+  return 2 * earthRadius * Math.asin(Math.sqrt(h))
+}
 
 function getUpdatedTime(hospital) {
   const time = new Date(hospital.updatedAt).getTime()
@@ -52,6 +66,7 @@ export default function MapPage() {
   const inflightDetailIdsRef = useRef(new Set())
   const [gpsLocation, setGpsLocation] = useState(null)
   const [customLocation, setCustomLocation] = useState(null)
+  const [viewportCenter, setViewportCenter] = useState(null)
   const [hospitals, setHospitals] = useState([])
   const [radius, setRadius] = useState(5)
   const [selectedTreatments, setSelectedTreatments] = useState([])
@@ -68,6 +83,14 @@ export default function MapPage() {
   const [lastFetchedAt, setLastFetchedAt] = useState(null)
 
   const userLocation = customLocation ?? gpsLocation
+  const mapMovedFromSearchLocation = useMemo(
+    () => getDistanceMeters(userLocation, viewportCenter) > MAP_RESEARCH_THRESHOLD_METERS,
+    [userLocation, viewportCenter]
+  )
+
+  useEffect(() => {
+    if (userLocation) setViewportCenter(userLocation)
+  }, [userLocation])
 
   // GPS 기반 내 위치 가져오기
   useEffect(() => {
@@ -171,7 +194,14 @@ export default function MapPage() {
   }
 
   const handleSearchCurrentLocation = () => {
-    setCustomLocation(null)
+    const searchLocation = viewportCenter ?? userLocation
+    if (searchLocation) {
+      setCustomLocation({
+        lat: searchLocation.lat,
+        lng: searchLocation.lng,
+        label: '지도 중심 위치',
+      })
+    }
     setSelectedHospital(null)
     setExpandedHospitalIds([])
     setHospitalDetails({})
@@ -211,19 +241,31 @@ export default function MapPage() {
       onOnlyAvailableBedsChange={setOnlyAvailableBeds}
       updateWindow={updateWindow}
       onUpdateWindowChange={setUpdateWindow}
-      onSearchCurrentLocation={handleSearchCurrentLocation}
       lastFetchedAt={lastFetchedAt}
       expandedHospitalIds={expandedHospitalIds}
       hospitalDetails={hospitalDetails}
       detailLoadingById={detailLoadingById}
       detailErrorById={detailErrorById}
     >
-      <KakaoMap
-        userLocation={userLocation}
-        hospitals={visibleHospitals}
-        selectedHospital={selectedHospital}
-        onHospitalClick={handleHospitalSelect}
-      />
+      <>
+        <KakaoMap
+          userLocation={userLocation}
+          hospitals={visibleHospitals}
+          selectedHospital={selectedHospital}
+          onHospitalClick={handleHospitalSelect}
+          onViewportCenterChange={setViewportCenter}
+        />
+        {mapMovedFromSearchLocation && (
+          <button
+            type="button"
+            className="map-research-button"
+            onClick={handleSearchCurrentLocation}
+            disabled={loading}
+          >
+            {loading ? '검색 중' : '지도 중심에서 재검색'}
+          </button>
+        )}
+      </>
     </HospitalPanel>
   )
 }

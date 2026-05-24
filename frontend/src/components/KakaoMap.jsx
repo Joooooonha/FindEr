@@ -12,11 +12,22 @@ function getBedLabel(hospital) {
   return String(hospital.availableBeds)
 }
 
-export default function KakaoMap({ userLocation, hospitals, selectedHospital, onHospitalClick }) {
+export default function KakaoMap({
+  userLocation,
+  hospitals,
+  selectedHospital,
+  onHospitalClick,
+  onViewportCenterChange,
+}) {
   const containerRef = useRef(null)
   const mapRef = useRef(null)
   const overlaysRef = useRef([])
   const userMarkerRef = useRef(null)
+  const onViewportCenterChangeRef = useRef(onViewportCenterChange)
+
+  useEffect(() => {
+    onViewportCenterChangeRef.current = onViewportCenterChange
+  }, [onViewportCenterChange])
 
   // 최초 지도 생성 (마운트 시 1회)
   useEffect(() => {
@@ -27,7 +38,20 @@ export default function KakaoMap({ userLocation, hospitals, selectedHospital, on
     mapRef.current = new kakao.maps.Map(containerRef.current, { center, level: 6 })
     userMarkerRef.current = new kakao.maps.Marker({ position: center, map: mapRef.current })
 
+    const handleMapMoved = () => {
+      const currentCenter = mapRef.current.getCenter()
+      onViewportCenterChangeRef.current?.({
+        lat: currentCenter.getLat(),
+        lng: currentCenter.getLng(),
+      })
+    }
+
+    kakao.maps.event.addListener(mapRef.current, 'dragend', handleMapMoved)
+    kakao.maps.event.addListener(mapRef.current, 'zoom_changed', handleMapMoved)
+
     return () => {
+      kakao.maps.event.removeListener(mapRef.current, 'dragend', handleMapMoved)
+      kakao.maps.event.removeListener(mapRef.current, 'zoom_changed', handleMapMoved)
       overlaysRef.current.forEach(o => o.setMap(null))
       overlaysRef.current = []
       userMarkerRef.current?.setMap(null)

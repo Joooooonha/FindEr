@@ -11,6 +11,9 @@
 .DS_Store
 Thumbs.db
 
+# Local handoff notes
+handoff.md
+
 # Backend (Spring Boot)
 backend/target/
 backend/*.log
