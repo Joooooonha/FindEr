@@ -111,71 +111,63 @@ input {
   top: 50%;
   left: 50%;
   z-index: 19;
-  width: 38px;
-  height: 38px;
-  transform: translate(-50%, -50%);
-  border: 2px solid #64748b;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.72);
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.14);
+  width: 30px;
+  height: 42px;
+  transform: translate(-50%, -100%);
+  filter: drop-shadow(0 6px 10px rgba(15, 23, 42, 0.2));
   pointer-events: none;
-  transition:
-    border-color 0.15s ease,
-    background-color 0.15s ease,
-    box-shadow 0.15s ease;
+  transition: filter 0.15s ease;
 }
 
 .map-center-search-marker.is-active {
-  border-color: #2563eb;
-  background: rgba(255, 255, 255, 0.88);
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.22);
+  filter: drop-shadow(0 8px 14px rgba(15, 23, 42, 0.24));
 }
 
 .map-center-search-marker::before,
 .map-center-search-marker::after {
   content: '';
   position: absolute;
-  background: #64748b;
+  left: 50%;
+  background: #cbd5e1;
   transition: background-color 0.15s ease;
 }
 
 .map-center-search-marker.is-active::before,
 .map-center-search-marker.is-active::after {
-  background: #2563eb;
+  background: #94a3b8;
 }
 
 .map-center-search-marker::before {
-  top: -8px;
-  bottom: -8px;
-  left: 50%;
-  width: 2px;
+  top: 0;
+  width: 30px;
+  height: 30px;
   transform: translateX(-50%);
+  border: 2px solid #fff;
+  border-radius: 999px;
+  box-sizing: border-box;
 }
 
 .map-center-search-marker::after {
-  top: 50%;
-  right: -8px;
-  left: -8px;
-  height: 2px;
-  transform: translateY(-50%);
+  bottom: 5px;
+  width: 16px;
+  height: 16px;
+  transform: translateX(-50%) rotate(45deg);
+  border-right: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  border-radius: 0 0 4px 0;
+  box-sizing: border-box;
 }
 
 .map-center-search-dot {
   position: absolute;
-  top: 50%;
+  top: 10px;
   left: 50%;
   z-index: 1;
-  width: 8px;
-  height: 8px;
-  transform: translate(-50%, -50%);
-  border: 2px solid #fff;
+  width: 10px;
+  height: 10px;
+  transform: translateX(-50%);
   border-radius: 999px;
-  background: #64748b;
-  transition: background-color 0.15s ease;
-}
-
-.map-center-search-marker.is-active .map-center-search-dot {
-  background: #ef4444;
+  background: #fff;
 }
 
 .map-research-button {
