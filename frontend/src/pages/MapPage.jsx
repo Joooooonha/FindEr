@@ -255,6 +255,12 @@ export default function MapPage() {
           onHospitalClick={handleHospitalSelect}
           onViewportCenterChange={setViewportCenter}
         />
+        <div
+          className={`map-center-search-marker${mapMovedFromSearchLocation ? ' is-active' : ''}`}
+          aria-hidden="true"
+        >
+          <span className="map-center-search-dot" />
+        </div>
         {mapMovedFromSearchLocation && (
           <button
             type="button"
