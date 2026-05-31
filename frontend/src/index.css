@@ -170,22 +170,41 @@ input {
   background: #fff;
 }
 
-.map-research-button {
+.map-research-actions {
   position: absolute;
   top: 16px;
   left: 50%;
   z-index: 20;
   transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 24px);
+}
+
+.map-return-button,
+.map-research-button {
+  flex: 0 0 auto;
   padding: 10px 16px;
-  border: 1px solid #1d4ed8;
   border-radius: 999px;
-  background: #2563eb;
-  color: #fff;
   font-size: 13px;
   font-weight: 800;
   line-height: 1;
+  white-space: nowrap;
   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
   cursor: pointer;
+}
+
+.map-return-button {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+}
+
+.map-research-button {
+  border: 1px solid #1d4ed8;
+  background: #2563eb;
+  color: #fff;
 }
 
 .map-research-button:disabled {
@@ -220,6 +239,17 @@ input {
 
   .finder-map-pane {
     min-height: 360px;
+  }
+
+  .map-research-actions {
+    top: 12px;
+    gap: 6px;
+  }
+
+  .map-return-button,
+  .map-research-button {
+    padding: 9px 12px;
+    font-size: 12px;
   }
 }
 
