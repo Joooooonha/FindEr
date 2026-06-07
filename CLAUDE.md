@@ -14,27 +14,14 @@
 
 ```
 com.finder
-├── card/                            # 응급카드 도메인
-│   ├── domain/
-│   │   └── EmergencyCard.java       # JPA 엔티티
-│   ├── repository/
-│   │   └── EmergencyCardRepository.java
-│   ├── service/
-│   │   └── EmergencyCardService.java
-│   ├── controller/
-│   │   └── EmergencyCardController.java
-│   └── dto/
-│       ├── CardCreateRequest.java
-│       ├── CardUpdateRequest.java
-│       ├── CardCreateResponse.java
-│       └── CardResponse.java
 ├── hospital/                        # 병원 도메인
-│   ├── domain/
-│   ├── repository/
-│   ├── service/
+│   ├── client/                      # 외부 API client (E-Gen, safetydata)
 │   ├── controller/
-│   └── dto/
+│   ├── domain/                      # HospitalInfo, BedSnapshot 등
+│   ├── dto/
+│   └── service/                     # 유스케이스, 캐시, 스케줄러
 └── common/
+    ├── config/                      # RestTemplate, CORS 등 공통 설정
     ├── exception/                   # 커스텀 예외
     ├── response/                    # 표준 응답 포맷
     └── GlobalExceptionHandler.java
@@ -58,10 +45,10 @@ controller → service → repository → domain
 - Request, Response를 명확히 구분한다.
 
 ```java
-public record CardCreateRequest(
-        @NotBlank String name,
-        LocalDate birthDate,
-        @NotBlank @Size(min = 4, max = 8) String pin
+public record HospitalSearchRequest(
+        @NotNull Double lat,
+        @NotNull Double lng,
+        @Positive double radiusKm
 ) {}
 ```
 
@@ -70,15 +57,7 @@ public record CardCreateRequest(
 - 생성자 직접 노출 금지. 정적 팩토리 메서드(`create`) 사용.
 - setter 금지. 상태 변경은 의미 있는 메서드명으로.
 - `@NoArgsConstructor(access = AccessLevel.PROTECTED)` 필수.
-
-```java
-// 올바른 예
-public static EmergencyCard create(String token, CardCreateRequest req, String pinHash) { ... }
-public void update(CardUpdateRequest req) { ... }
-
-// 금지
-public void setName(String name) { ... }
-```
+- 현재 영속 엔티티는 없다. 새 엔티티를 추가할 때 위 규칙을 따른다.
 
 ### 예외 처리
 
@@ -96,7 +75,7 @@ common/exception/
 ```json
 {
   "code": "NOT_FOUND",
-  "message": "존재하지 않는 카드입니다."
+  "message": "존재하지 않는 병원입니다."
 }
 ```
 
@@ -109,8 +88,8 @@ common/exception/
 - 자명한 코드에 주석 금지.
 
 ```java
-/** PIN 검증 실패 시 카드 존재 여부 노출 방지를 위해 동일한 예외를 반환한다. */
-public void deleteCard(String token, String pin) { ... }
+/** 좌표/반경에 해당하는 병원 목록을 거리·가용 상태 기준으로 정렬해 반환한다. */
+public HospitalListResponse getHospitals(double lat, double lng, double radiusKm) { ... }
 ```
 
 ---
@@ -127,10 +106,10 @@ public void deleteCard(String token, String pin) { ... }
 
 ```java
 @Test
-void 토큰이_존재하지_않으면_NotFoundException을_던진다() { ... }
+void 반경_내_병원이_없으면_빈_목록을_반환한다() { ... }
 
 @Test
-void PIN이_틀리면_카드를_삭제하지_않는다() { ... }
+void 갱신_시각이_30분_초과인_병상정보는_UNKNOWN으로_분류한다() { ... }
 ```
 
 ### 원칙
@@ -151,19 +130,19 @@ fix/xxx       → 버그 수정 브랜치.
 ```
 
 **브랜치 네이밍 예시**:
-- `feature/emergency-card-api`
 - `feature/hospital-search-api`
-- `fix/card-token-duplicate`
+- `feature/map-center-marker`
+- `fix/bed-cache-stale-threshold`
 
 ### 커밋 메시지
 
 한글로 작성한다. 타입 접두사를 붙인다.
 
 ```
-feat: 응급카드 생성 API 구현
+feat: 지도 중심 재검색 기능 구현
 fix: 토큰 중복 생성 버그 수정
 refactor: 병원 서비스 레이어 분리
-test: 응급카드 서비스 단위 테스트 추가
+test: 병원 서비스 단위 테스트 추가
 chore: GitHub Actions Node.js 버전 업데이트
 ```
 
@@ -174,7 +153,6 @@ chore: GitHub Actions Node.js 버전 업데이트
 - Base URL: `/api/v1`
 - 성공 응답: HTTP 상태코드로 구분 (200, 201, 204)
 - 에러 응답: 항상 `{ code, message }` 포맷
-- PIN은 요청 헤더 `X-Card-Pin`으로 전달
 
 ---
 
@@ -206,5 +184,5 @@ chore: GitHub Actions Node.js 버전 업데이트
 | `DB_URL` | MySQL 연결 URL |
 | `DB_USERNAME` | DB 사용자명 |
 | `DB_PASSWORD` | DB 비밀번호 |
-| `APP_BASE_URL` | 응급카드 공유 URL 생성용 |
 | `EGEN_API_KEY` | E-Gen 공공데이터 API 키 |
+| `BED_API_KEY` | safetydata.go.kr 실시간 병상정보 API 키 |
