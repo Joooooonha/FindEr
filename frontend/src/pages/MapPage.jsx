@@ -80,6 +80,7 @@ export default function MapPage() {
   const [onlyAvailableBeds, setOnlyAvailableBeds] = useState(false)
   const [updateWindow, setUpdateWindow] = useState('all')
   const [refreshKey, setRefreshKey] = useState(0)
+  const [recenterKey, setRecenterKey] = useState(0)
   const [lastFetchedAt, setLastFetchedAt] = useState(null)
 
   const userLocation = customLocation ?? gpsLocation
@@ -211,6 +212,12 @@ export default function MapPage() {
     setRefreshKey(key => key + 1)
   }
 
+  const handleReturnToSearchLocation = () => {
+    if (!userLocation) return
+    setViewportCenter(userLocation)
+    setRecenterKey(key => key + 1)
+  }
+
   if (!userLocation) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#6b7280', fontSize: '14px' }}>
@@ -254,6 +261,7 @@ export default function MapPage() {
           selectedHospital={selectedHospital}
           onHospitalClick={handleHospitalSelect}
           onViewportCenterChange={setViewportCenter}
+          recenterKey={recenterKey}
         />
         <div
           className={`map-center-search-marker${mapMovedFromSearchLocation ? ' is-active' : ''}`}
@@ -262,14 +270,23 @@ export default function MapPage() {
           <span className="map-center-search-dot" />
         </div>
         {mapMovedFromSearchLocation && (
-          <button
-            type="button"
-            className="map-research-button"
-            onClick={handleSearchCurrentLocation}
-            disabled={loading}
-          >
-            {loading ? '검색 중' : '지도 중심에서 재검색'}
-          </button>
+          <div className="map-research-actions">
+            <button
+              type="button"
+              className="map-return-button"
+              onClick={handleReturnToSearchLocation}
+            >
+              현재 위치로
+            </button>
+            <button
+              type="button"
+              className="map-research-button"
+              onClick={handleSearchCurrentLocation}
+              disabled={loading}
+            >
+              {loading ? '검색 중' : '지도 중심에서 재검색'}
+            </button>
+          </div>
         )}
       </>
     </HospitalPanel>

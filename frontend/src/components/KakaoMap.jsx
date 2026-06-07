@@ -18,6 +18,7 @@ export default function KakaoMap({
   selectedHospital,
   onHospitalClick,
   onViewportCenterChange,
+  recenterKey,
 }) {
   const containerRef = useRef(null)
   const mapRef = useRef(null)
@@ -67,7 +68,7 @@ export default function KakaoMap({
     const center = new window.kakao.maps.LatLng(userLocation.lat, userLocation.lng)
     mapRef.current.setCenter(center)
     userMarkerRef.current?.setPosition(center)
-  }, [userLocation])
+  }, [userLocation, recenterKey])
 
   // 병원 마커 업데이트
   useEffect(() => {
