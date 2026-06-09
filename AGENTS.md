@@ -63,8 +63,6 @@
 | Axios | ^1.16.0 | `frontend/package.json` |
 | ESLint | ^10.2.1 | `frontend/package.json` |
 
-`qrcode.react`가 package.json에 남아 있으나, 응급카드 제거 이후 실 사용처가 없다 — 후속 정리 예정 (섹션 6 참고).
-
 ### Infra & 배포
 
 | 항목 | 값 | 근거 |
@@ -327,7 +325,6 @@ npm run preview
 
 ### 미해결/추적 항목
 
-- **`qrcode.react`** 의존성: package.json에 남아 있으나 카드 제거 후 실 사용처 0건. 별도 PR로 정리.
 - 백엔드 테스트가 거의 없다(`FindErApplicationTests`만 존재). 도메인 단위 테스트부터 채워야 한다.
 - `application.properties`에 `jpa.hibernate.ddl-auto=update`. 영속 엔티티가 0개라 사실상 무영향이지만, 운영 DB에 잔존 테이블이 남을 수 있어 머지 후 수동 확인.
 
