@@ -87,7 +87,7 @@
 | safetydata.go.kr | 전국 실시간 병상 스냅샷 | `DSSP-IF-00242` |
 | Kakao Maps JS SDK | 프론트 지도 렌더링/장소 검색 | `dapi.kakao.com/v2/maps/sdk.js` |
 
-E-Gen 기본 URL: `http://apis.data.go.kr/B552657/ErmctInfoInqireService`
+E-Gen 기본 URL은 `application.properties`의 `egen.api.base-url` 속성으로 외부화돼 있어 환경별 오버라이드가 가능하다. 현 기본값은 `http://apis.data.go.kr/B552657/ErmctInfoInqireService`. HTTPS는 data.go.kr 엔드포인트별로 지원/리다이렉트 동작이 일정하지 않으므로, 변경 시 호스트 HEAD가 아니라 **필수 쿼리/헤더가 포함된 실제 요청**으로 응답·인증 동작을 검증한 뒤 적용한다.
 
 ### 환경변수
 
@@ -321,7 +321,8 @@ npm run preview
   - 백엔드 `com.finder.card` 패키지 전체 삭제.
   - `common/config/AppConfig`의 `BCryptPasswordEncoder` bean, `build.gradle`의 `spring-security-crypto`, `application.properties`의 `app.base-url` 정리.
   - README/architecture/api-spec/db-schema/CLAUDE.md 문서 갱신.
-  - 머지·배포 완료 후 EC2 MySQL에서 `DROP TABLE emergency_card;` 수동 실행 필요 (Hibernate `ddl-auto=update`라 자동 drop 안 됨).
+  - 머지·배포 완료 후 EC2 MySQL에서 `DROP TABLE IF EXISTS emergency_card;` 수동 실행 필요 (Hibernate `ddl-auto=update`라 자동 drop 안 됨).
+    - 실행 전 체크리스트: (1) 대상 DB/스키마가 운영인지 재확인, (2) `mysqldump`로 해당 테이블 백업 스냅샷 확보, (3) 실행자·시각 기록, (4) 외래키/참조 영향 점검, (5) 백업으로부터의 롤백 SQL 준비.
 - **본 PR (AGENTS.md 메인화)**: 이 문서를 메인 컨텍스트로 승격, `CLAUDE.md`는 포인터로 축소.
 
 ### 미해결/추적 항목
@@ -428,7 +429,7 @@ API:
 
 - 초기 기능으로 카드 CRUD/QR 공유가 구현되어 있었으나, 핵심 가치(가까운 가용 응급실 찾기)와 맞지 않아 제거 결정.
 - 프론트 페이지·API·헤더 진입, 백엔드 `com.finder.card` 패키지, `BCryptPasswordEncoder` bean, `spring-security-crypto`, `app.base-url` 모두 정리.
-- 운영 DB의 `emergency_card` 테이블은 PR #26 머지 후 수동으로 `DROP TABLE` 필요.
+- 운영 DB의 `emergency_card` 테이블은 PR #26 머지 후 수동으로 `DROP TABLE IF EXISTS emergency_card;` 실행 필요. 절차는 §6 진행 중 항목의 체크리스트(대상 DB 재확인 → 백업 스냅샷 → 실행 로그 → 참조 영향 점검 → 롤백 SQL 준비)를 따른다.
 
 ### Docker / Kubernetes 미도입
 
