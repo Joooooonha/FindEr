@@ -361,6 +361,7 @@ npm run preview
 - E-Gen 기본정보 API는 일반 의원/치과까지 대량 반환할 수 있다. 응급실 식별에는 실시간 가용병상 API의 `hpid` 목록을 whitelist로 활용한다.
 - 한글 `STAGE1` query는 인코딩과 `build(true)` 이중 인코딩 방지 로직을 유지한다.
 - 외부 API 키가 없을 때 앱이 최대한 기동되고 빈 데이터/UNKNOWN fallback으로 동작하게 한다.
+- data.go.kr는 서비스 키 미등록/만료/할당량 초과 시 `_type=json`을 무시하고 `<OpenAPI_ServiceResponse>` XML 오류를 반환하거나, JSON이라도 `header.resultCode`가 `00`이 아닌 값으로 응답할 수 있다. `EGenApiClientImpl`은 이 두 경우를 감지해 "정상 응답이지만 데이터 0건"과 구분되는 ERROR 로그(`서비스 키 확인 필요`)를 남긴다 (#33).
 
 Frontend:
 
