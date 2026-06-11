@@ -81,6 +81,14 @@ class EGenApiClientImplTest {
             </OpenAPI_ServiceResponse>
             """;
 
+    private static final String XML_NON_AUTH_ERROR_RESPONSE = """
+            <html>
+                <body>
+                    <h1>502 Bad Gateway</h1>
+                </body>
+            </html>
+            """;
+
     private static final String EMPTY_ITEMS_RESPONSE = """
             {
               "response": {
@@ -165,6 +173,18 @@ class EGenApiClientImplTest {
                 .anyMatch(msg -> msg.contains("서비스 키 확인 필요")
                         && msg.contains("SERVICE_KEY_IS_NOT_REGISTERED_ERROR")
                         && msg.contains("returnReasonCode=30"));
+    }
+
+    @Test
+    void getHospitalsByLocation_인증오류아닌_XML응답_빈리스트와_일반오류로그() {
+        when(restTemplate.getForObject(anyString(), eq(String.class))).thenReturn(XML_NON_AUTH_ERROR_RESPONSE);
+
+        List<EGenItem> items = client.getHospitalsByLocation(37.45, 127.11, 100);
+
+        assertThat(items).isEmpty();
+        assertThat(errorLogs())
+                .anyMatch(msg -> msg.contains("E-Gen API 호출 실패"))
+                .noneMatch(msg -> msg.contains("서비스 키 확인 필요"));
     }
 
     @Test

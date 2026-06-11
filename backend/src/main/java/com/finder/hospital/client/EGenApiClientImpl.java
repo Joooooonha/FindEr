@@ -157,15 +157,20 @@ public class EGenApiClientImpl implements EGenApiClient {
     /**
      * 응답 본문을 검증하고 `/response/body` 노드를 반환한다.
      * <p>data.go.kr는 서비스 키 미등록·만료·할당량 초과 시 {@code _type=json} 요청을 무시하고
-     * {@code <OpenAPI_ServiceResponse>} XML 오류 응답을 돌려주거나, JSON 형식이라도
-     * {@code header.resultCode}가 {@code 00}이 아닌 값으로 응답한다. 두 경우 모두
-     * "정상 응답이지만 데이터 0건"과 구분되는 {@link EGenAuthException}으로 변환해
-     * 호출부에서 원인을 명확히 로그로 남길 수 있게 한다.
+     * {@code returnAuthMsg}/{@code returnReasonCode}를 포함한 {@code <OpenAPI_ServiceResponse>}
+     * XML 오류 응답을 돌려주거나, JSON 형식이라도 {@code header.resultCode}가 {@code 00}이
+     * 아닌 값으로 응답한다. 두 경우 모두 "정상 응답이지만 데이터 0건"과 구분되는
+     * {@link EGenAuthException}으로 변환해 호출부에서 원인을 명확히 로그로 남길 수 있게 한다.
+     * <p>그 외 XML/HTML(예: 게이트웨이 오류 페이지)은 인증 오류로 단정할 수 없으므로
+     * 일반 {@link IllegalStateException}으로 던져 generic 호출 실패로 처리한다.
      */
     private JsonNode parseResponseBody(String response) throws Exception {
         String trimmed = response == null ? "" : response.strip();
         if (trimmed.startsWith("<")) {
-            throw new EGenAuthException(extractXmlAuthMessage(trimmed));
+            if (trimmed.contains("<returnAuthMsg>") || trimmed.contains("<returnReasonCode>")) {
+                throw new EGenAuthException(extractXmlAuthMessage(trimmed));
+            }
+            throw new IllegalStateException("XML/HTML 응답: " + trimmed.substring(0, Math.min(trimmed.length(), 200)));
         }
 
         JsonNode root = objectMapper.readTree(response);
