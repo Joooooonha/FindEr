@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import KakaoMap from '../components/KakaoMap'
 import HospitalPanel from '../components/HospitalPanel'
-import { matchesAllGroups } from '../components/TreatmentFilter'
+import { classifyHospital, matchedGroupIds, groupLabels } from '../components/treatmentGroups'
 import { fetchHospitalDetail, fetchHospitals } from '../api/hospital'
 
 const DEFAULT_LOCATION = { lat: 37.5665, lng: 126.9780 } // 서울 시청
@@ -137,18 +137,41 @@ export default function MapPage() {
     inflightDetailIdsRef.current.clear()
   }, [userLocation, radius])
 
-  // 선택된 증상/목록 필터와 정렬 조건에 따라 병원 목록을 계산한다.
-  const visibleHospitals = useMemo(() => {
+  // 병상/업데이트 필터(확정 조건)를 먼저 적용해 정렬한 기준 목록.
+  const baseHospitals = useMemo(() => {
     const updateHours = UPDATE_WINDOW_HOURS[updateWindow]
     const filtered = hospitals.filter(hospital => {
-      const treatmentMatched = selectedTreatments.length === 0
-        || matchesAllGroups(hospital.availableTreatments, selectedTreatments)
       const bedMatched = !onlyAvailableBeds || hasAvailableBeds(hospital)
       const updateMatched = isUpdatedWithin(hospital, updateHours)
-      return treatmentMatched && bedMatched && updateMatched
+      return bedMatched && updateMatched
     })
     return sortHospitals(filtered, sortBy)
-  }, [hospitals, selectedTreatments, onlyAvailableBeds, updateWindow, sortBy])
+  }, [hospitals, onlyAvailableBeds, updateWindow, sortBy])
+
+  // 증상 필터는 탈락 대신 3단 분류한다. 매칭 병원에는 근거 라벨을 붙인다.
+  const classified = useMemo(() => {
+    const matched = []
+    const noData = []
+    const unavailable = []
+    for (const hospital of baseHospitals) {
+      const kind = classifyHospital(hospital.availableTreatments, selectedTreatments)
+      if (kind === 'matched') {
+        const labels = groupLabels(matchedGroupIds(hospital.availableTreatments, selectedTreatments))
+        matched.push({ ...hospital, matchedTreatments: labels })
+      } else if (kind === 'no_data') {
+        noData.push(hospital)
+      } else {
+        unavailable.push(hospital)
+      }
+    }
+    return { matched, noData, unavailable }
+  }, [baseHospitals, selectedTreatments])
+
+  // 지도/선택 정리에는 "수용 불가(확정)"만 제외하고 매칭+정보미보고를 노출한다.
+  const visibleHospitals = useMemo(
+    () => [...classified.matched, ...classified.noData],
+    [classified]
+  )
 
   // 필터링 결과에 선택된 병원이 빠지면 선택을 해제한다.
   useEffect(() => {
@@ -229,6 +252,10 @@ export default function MapPage() {
   return (
     <HospitalPanel
       hospitals={visibleHospitals}
+      matchedHospitals={classified.matched}
+      noDataHospitals={classified.noData}
+      unavailableHospitals={classified.unavailable}
+      hasTreatmentFilter={selectedTreatments.length > 0}
       totalCount={hospitals.length}
       loading={loading}
       radius={radius}

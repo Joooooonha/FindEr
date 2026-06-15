@@ -73,6 +73,27 @@ export default function HospitalItem({
         )}
       </div>
 
+      {hospital.matchedTreatments?.length > 0 && (
+        <div style={{ display: 'flex', gap: '4px', marginTop: '6px', flexWrap: 'wrap' }}>
+          {hospital.matchedTreatments.map(label => (
+            <span
+              key={label}
+              style={{
+                fontSize: '11px',
+                fontWeight: 600,
+                color: '#166534',
+                background: '#dcfce7',
+                border: '1px solid #bbf7d0',
+                borderRadius: '10px',
+                padding: '2px 8px',
+              }}
+            >
+              ✓ {label}
+            </span>
+          ))}
+        </div>
+      )}
+
       {hospital.blockMessages?.length > 0 && (
         <div style={{ marginTop: '8px', padding: '6px 10px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px' }}>
           {hospital.blockMessages.map((m, idx) => (

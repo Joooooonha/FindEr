@@ -1,29 +1,10 @@
-/** 증상 그룹 → 매칭되는 mkioskty 코드 집합 매핑. AND 검색 시 그룹 단위로 OR. */
-export const TREATMENT_GROUPS = [
-  { id: 'cardiac',    label: '심근경색',         codes: ['mkioskty1'] },
-  { id: 'stroke',     label: '뇌졸중',           codes: ['mkioskty2', 'mkioskty3', 'mkioskty4'] },
-  { id: 'aorta',      label: '대동맥응급',       codes: ['mkioskty5', 'mkioskty6'] },
-  { id: 'abdomen',    label: '복부응급수술',     codes: ['mkioskty9'] },
-  { id: 'endoscopy',  label: '응급내시경',       codes: ['mkioskty11', 'mkioskty13'] },
-  { id: 'obgyn',      label: '산부인과응급',     codes: ['mkioskty16', 'mkioskty17', 'mkioskty18'] },
-  { id: 'burn',       label: '중증화상',         codes: ['mkioskty19'] },
-  { id: 'limb',       label: '사지접합',         codes: ['mkioskty20', 'mkioskty21'] },
-  { id: 'dialysis',   label: '응급투석',         codes: ['mkioskty22', 'mkioskty23'] },
-  { id: 'psych',      label: '정신과(폐쇄병동)', codes: ['mkioskty24'] },
-  { id: 'eye',        label: '안과응급',         codes: ['mkioskty25'] },
-  { id: 'pediatric',  label: '소아응급',         codes: ['mkioskty10', 'mkioskty12', 'mkioskty14', 'mkioskty15', 'mkioskty27'] },
-]
+import HelpBadge from './HelpBadge'
+import { TREATMENT_GROUPS } from './treatmentGroups'
+import styles from './TreatmentFilter.module.css'
 
-/** 병원의 가용 시술 코드 집합이 선택된 모든 그룹을 만족하는지 판정. */
-export function matchesAllGroups(hospitalCodes, selectedGroupIds) {
-  if (selectedGroupIds.length === 0) return true
-  if (!hospitalCodes || hospitalCodes.length === 0) return false
-  const set = new Set(hospitalCodes)
-  return selectedGroupIds.every(groupId => {
-    const group = TREATMENT_GROUPS.find(g => g.id === groupId)
-    return group && group.codes.some(code => set.has(code))
-  })
-}
+const FILTER_HELP =
+  '선택한 증상을 지금 수용 가능하다고 보고한 응급실을 우선 표시합니다. ' +
+  '병원이 중증질환 수용정보를 보고하지 않은 경우 "정보 미보고"로 따로 묶어 보여줍니다.'
 
 export default function TreatmentFilter({ selected, onChange }) {
   const toggle = (id) => {
@@ -31,20 +12,20 @@ export default function TreatmentFilter({ selected, onChange }) {
   }
 
   return (
-    <div style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-        <p style={{ fontSize: '12px', color: '#9ca3af' }}>증상별 필터</p>
+    <div className={styles.section}>
+      <div className={styles.header}>
+        <span className={styles.titleRow}>
+          <span className={styles.title}>증상별 필터</span>
+          <HelpBadge label={FILTER_HELP} />
+        </span>
         {selected.length > 0 && (
-          <button
-            type="button"
-            onClick={() => onChange([])}
-            style={{ fontSize: '11px', color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-          >
+          <button type="button" onClick={() => onChange([])} className={styles.reset}>
             초기화
           </button>
         )}
       </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+      <p className={styles.help}>증상을 고르면 지금 수용 가능한 응급실을 위로 모아 보여줍니다.</p>
+      <div className={styles.chips}>
         {TREATMENT_GROUPS.map(group => {
           const active = selected.includes(group.id)
           return (
@@ -52,17 +33,9 @@ export default function TreatmentFilter({ selected, onChange }) {
               key={group.id}
               type="button"
               aria-pressed={active}
+              title={group.desc}
               onClick={() => toggle(group.id)}
-              style={{
-                padding: '4px 10px',
-                fontSize: '12px',
-                fontWeight: active ? 600 : 400,
-                color: active ? '#fff' : '#374151',
-                background: active ? '#dc2626' : '#fff',
-                border: active ? 'none' : '1px solid #d1d5db',
-                borderRadius: '14px',
-                cursor: 'pointer',
-              }}
+              className={`${styles.chip}${active ? ` ${styles.chipActive}` : ''}`}
             >
               {group.label}
             </button>
