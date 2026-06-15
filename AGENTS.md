@@ -430,7 +430,7 @@ API:
   - `no_data`(정보 미보고): `mkioskty` 수용정보 자체가 없음. 숨기지 않고 흐리게 하단에 묶어 전화 확인을 안내한다.
   - 매칭된 병원에는 어떤 증상 그룹을 충족했는지 근거 배지(`matchedTreatments`)를 노출해 "왜 적합한지"를 보여준다.
   - 지도 마커/선택 정리에는 확정 탈락인 `unavailable`만 제외하고 `matched`+`no_data`를 노출한다.
-  - 분류 로직과 그룹 매핑은 `components/treatmentGroups.js`에 두고, `TreatmentFilter.jsx`는 컴포넌트만 export한다(Fast Refresh 경고 회피).
+  - 분류 로직과 그룹 매핑은 `components/treatmentGroups.js`에 두고, `TreatmentFilter.jsx`는 컴포넌트만 export한다. Fast Refresh 경고를 피하면서, `TREATMENT_GROUPS`·`matchedGroupIds`·`classifyHospital` 같은 상수/함수를 `MapPage` 등 다른 컴포넌트에서도 재사용할 수 있다.
 
 ### 응급카드 기능 제거 (2026-06-09)
 
