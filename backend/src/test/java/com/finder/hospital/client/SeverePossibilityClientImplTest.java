@@ -15,7 +15,6 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -138,8 +137,9 @@ class SeverePossibilityClientImplTest {
         List<SeverePossibilityItem> items = client.getAllPossibilities();
 
         assertThat(items).isEmpty();
-        // 시도(STAGE1)마다 최대 3회 재시도하므로 단일 호출보다 많이 호출된다.
-        verify(restTemplate, atLeast(2)).getForObject(anyString(), eq(String.class));
+        // 17개 시도(STAGE1)가 각각 최대 3회 재시도를 모두 소진하므로 정확히 17*3회 호출된다.
+        // 재시도가 사라지면 17회로 줄어 이 검증이 깨지므로 재시도 동작 자체를 보장한다.
+        verify(restTemplate, times(17 * 3)).getForObject(anyString(), eq(String.class));
     }
 
     @Test
