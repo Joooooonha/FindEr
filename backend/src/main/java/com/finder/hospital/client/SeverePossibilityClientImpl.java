@@ -26,6 +26,8 @@ public class SeverePossibilityClientImpl implements SeverePossibilityClient {
     private static final String PATH = "/getSrsillDissAceptncPosblInfoInqire";
     private static final int FETCH_SIZE = 500;
     private static final int TREATMENT_COUNT = 28;
+    // apis.data.go.kr는 간헐적으로 504/타임아웃을 내는데 직후 재시도는 대부분 성공한다 (#35와 동일 호스트).
+    private static final int MAX_ATTEMPTS = 3;
 
     private static final List<String> STAGE1_LIST = List.of(
             "서울특별시", "부산광역시", "대구광역시", "인천광역시", "광주광역시",
@@ -36,6 +38,9 @@ public class SeverePossibilityClientImpl implements SeverePossibilityClient {
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+
+    /** 재시도 대기 기준(ms). 시도 횟수에 비례해 증가. 테스트에서 0으로 줄인다. */
+    private long retryBackoffMs = 1000;
 
     @Value("${egen.api.key}")
     private String apiKey;
@@ -70,30 +75,48 @@ public class SeverePossibilityClientImpl implements SeverePossibilityClient {
                 .build(true)
                 .toUriString();
 
-        try {
-            String response = restTemplate.getForObject(url, String.class);
-            JsonNode body = objectMapper.readTree(response).at("/response/body");
-            JsonNode itemNode = body.path("items").path("item");
-            if (itemNode.isMissingNode() || itemNode.isNull()) return List.of();
+        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+            try {
+                String response = restTemplate.getForObject(url, String.class);
+                JsonNode body = objectMapper.readTree(response).at("/response/body");
+                JsonNode itemNode = body.path("items").path("item");
+                if (itemNode.isMissingNode() || itemNode.isNull()) return List.of();
 
-            List<SeverePossibilityItem> items = new ArrayList<>();
-            if (itemNode.isArray()) {
-                for (JsonNode node : itemNode) {
-                    items.add(toItem(node));
+                List<SeverePossibilityItem> items = new ArrayList<>();
+                if (itemNode.isArray()) {
+                    for (JsonNode node : itemNode) {
+                        items.add(toItem(node));
+                    }
+                } else {
+                    items.add(toItem(itemNode));
                 }
-            } else {
-                items.add(toItem(itemNode));
-            }
 
-            int totalCount = body.path("totalCount").asInt(items.size());
-            if (totalCount > FETCH_SIZE) {
-                log.warn("중증질환 API 응답이 페이지 한계({}) 초과 ({}, totalCount={}). 일부 데이터 누락 가능",
-                        FETCH_SIZE, stage1, totalCount);
+                int totalCount = body.path("totalCount").asInt(items.size());
+                if (totalCount > FETCH_SIZE) {
+                    log.warn("중증질환 API 응답이 페이지 한계({}) 초과 ({}, totalCount={}). 일부 데이터 누락 가능",
+                            FETCH_SIZE, stage1, totalCount);
+                }
+                return items;
+            } catch (Exception e) {
+                if (attempt == MAX_ATTEMPTS) {
+                    log.warn("중증질환 API 호출 실패 ({}, {}회 시도): {}", stage1, MAX_ATTEMPTS, e.getMessage());
+                    return List.of();
+                }
+                log.warn("중증질환 API 호출 실패 ({}, 시도 {}/{}): {}. 재시도", stage1, attempt, MAX_ATTEMPTS, e.getMessage());
+                if (!backoff(attempt)) return List.of();
             }
-            return items;
-        } catch (Exception e) {
-            log.warn("중증질환 API 호출 실패 ({}): {}", stage1, e.getMessage());
-            return List.of();
+        }
+        return List.of();
+    }
+
+    /** 시도 횟수에 비례해 대기한다. 인터럽트되면 false를 반환해 호출을 중단시킨다. */
+    private boolean backoff(int attempt) {
+        try {
+            Thread.sleep(retryBackoffMs * attempt);
+            return true;
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            return false;
         }
     }
 

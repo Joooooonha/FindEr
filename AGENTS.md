@@ -362,6 +362,9 @@ npm run preview
 - 한글 `STAGE1` query는 인코딩과 `build(true)` 이중 인코딩 방지 로직을 유지한다.
 - 외부 API 키가 없을 때 앱이 최대한 기동되고 빈 데이터/UNKNOWN fallback으로 동작하게 한다.
 - data.go.kr는 서비스 키 미등록/만료/할당량 초과 시 `_type=json`을 무시하고 `<OpenAPI_ServiceResponse>` XML 오류를 반환하거나, JSON이라도 `header.resultCode`가 `00`이 아닌 값으로 응답할 수 있다. `EGenApiClientImpl`은 이 두 경우를 감지해 "정상 응답이지만 데이터 0건"과 구분되는 ERROR 로그(`서비스 키 확인 필요`)를 남긴다 (#33).
+- `apis.data.go.kr`·`safetydata.go.kr`는 간헐적으로 504/TLS 핸드셰이크 실패를 내지만 직후 재시도는 대부분 성공한다. `BedApiClientImpl`·`SeverePossibilityClientImpl`은 일시 실패를 백오프 재시도(최대 3회)로 흡수하고, 최종 실패만 빈 컬렉션 fallback으로 처리한다 (#35).
+- 중증질환 수용가능정보(`SeverePossibility`)는 1시간 주기라 재시작 직후 첫 갱신이 실패하면 증상 데이터가 길게 비어 증상 필터가 모든 병원을 걸러낸다. 캐시가 빈 동안만 짧은 주기(`severe.possibility.cold-retry-interval-ms`)로 재시도해 콜드 스타트 공백을 줄인다.
+- 스케줄러는 단일 스레드가 아니라 `SchedulerConfig`의 스레드 풀로 돌아, 한 외부 API 갱신이 재시도로 지연돼도 다른 갱신을 막지 않는다.
 
 Frontend:
 
