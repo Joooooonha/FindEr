@@ -11,8 +11,28 @@ function formatLastFetchedAt(value) {
   })
 }
 
+function HospitalList({ hospitals, selectedHospital, expandedHospitalIds, hospitalDetails, detailLoadingById, detailErrorById, onSelect, onCloseDetail }) {
+  return hospitals.map(h => (
+    <HospitalItem
+      key={h.id}
+      hospital={h}
+      isSelected={selectedHospital?.id === h.id}
+      isExpanded={expandedHospitalIds.includes(String(h.id))}
+      detail={hospitalDetails[String(h.id)]}
+      detailLoading={Boolean(detailLoadingById[String(h.id)])}
+      detailError={detailErrorById[String(h.id)]}
+      onClick={() => onSelect(h)}
+      onCloseDetail={() => onCloseDetail(String(h.id))}
+    />
+  ))
+}
+
 export default function HospitalPanel({
   hospitals,
+  matchedHospitals = [],
+  noDataHospitals = [],
+  unavailableHospitals = [],
+  hasTreatmentFilter = false,
   totalCount,
   loading,
   radius,
@@ -39,10 +59,21 @@ export default function HospitalPanel({
   detailErrorById,
   children,
 }) {
-  const filtered = hospitals.length !== totalCount
-  const countText = filtered
-    ? `${hospitals.length}개 매칭 (전체 ${totalCount}개 중)`
-    : `${hospitals.length}개 응급실`
+  const countText = hasTreatmentFilter
+    ? `수용 가능 ${matchedHospitals.length}개 · 전체 ${totalCount}개`
+    : hospitals.length !== totalCount
+      ? `${hospitals.length}개 표시 (전체 ${totalCount}개 중)`
+      : `${hospitals.length}개 응급실`
+
+  const listProps = {
+    selectedHospital,
+    expandedHospitalIds,
+    hospitalDetails,
+    detailLoadingById,
+    detailErrorById,
+    onSelect,
+    onCloseDetail,
+  }
 
   return (
     <div className="finder-map-layout">
@@ -145,24 +176,49 @@ export default function HospitalPanel({
             <div className={styles.emptyState}>
               불러오는 중...
             </div>
-          ) : hospitals.length === 0 ? (
-            <div className={styles.emptyState}>
-              {filtered ? '선택한 조건에 맞는 응급실이 없습니다' : '주변 응급실이 없습니다'}
-            </div>
+          ) : !hasTreatmentFilter ? (
+            hospitals.length === 0 ? (
+              <div className={styles.emptyState}>주변 응급실이 없습니다</div>
+            ) : (
+              <HospitalList hospitals={hospitals} {...listProps} />
+            )
+          ) : (matchedHospitals.length + noDataHospitals.length + unavailableHospitals.length) === 0 ? (
+            <div className={styles.emptyState}>조건에 맞는 응급실이 없습니다</div>
           ) : (
-            hospitals.map(h => (
-              <HospitalItem
-                key={h.id}
-                hospital={h}
-                isSelected={selectedHospital?.id === h.id}
-                isExpanded={expandedHospitalIds.includes(String(h.id))}
-                detail={hospitalDetails[String(h.id)]}
-                detailLoading={Boolean(detailLoadingById[String(h.id)])}
-                detailError={detailErrorById[String(h.id)]}
-                onClick={() => onSelect(h)}
-                onCloseDetail={() => onCloseDetail(String(h.id))}
-              />
-            ))
+            <>
+              <div className={styles.sectionTitle}>
+                ✅ 수용 가능 <span className={styles.sectionCount}>{matchedHospitals.length}</span>
+              </div>
+              {matchedHospitals.length === 0 ? (
+                <p className={styles.sectionHint}>선택한 증상을 지금 수용 가능하다고 보고한 응급실이 없습니다.</p>
+              ) : (
+                <HospitalList hospitals={matchedHospitals} {...listProps} />
+              )}
+
+              {noDataHospitals.length > 0 && (
+                <>
+                  <div className={styles.sectionTitle}>
+                    ❔ 정보 미보고 <span className={styles.sectionCount}>{noDataHospitals.length}</span>
+                  </div>
+                  <p className={styles.sectionHint}>중증질환 수용정보를 보고하지 않은 응급실입니다. 전화로 확인이 필요합니다.</p>
+                  <div className={styles.dimmedGroup}>
+                    <HospitalList hospitals={noDataHospitals} {...listProps} />
+                  </div>
+                </>
+              )}
+
+              {unavailableHospitals.length > 0 && (
+                <>
+                  <div className={styles.sectionTitle}>
+                    ⛔ 수용 불가 <span className={styles.sectionCount}>{unavailableHospitals.length}</span>
+                  </div>
+                  <p className={styles.sectionHint}>선택한 증상을 현재 수용 불가로 보고한 응급실입니다.</p>
+                  <div className={styles.dimmedGroup}>
+                    <HospitalList hospitals={unavailableHospitals} {...listProps} />
+                  </div>
+                </>
+              )}
+            </>
           )}
         </div>
       </aside>
