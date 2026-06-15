@@ -40,6 +40,12 @@ public class SeverePossibilityScheduler {
             grouped.computeIfAbsent(item.hpid(), k -> new HashSet<>())
                     .addAll(item.availableCodes());
         }
+
+        if (grouped.isEmpty()) {
+            log.warn("중증질환 시술 정보 응답에 유효한 hpid가 없음 (응답 {}건). 기존 캐시 유지", items.size());
+            return;
+        }
+
         cache.replaceAll(grouped);
         log.info("중증질환 시술 정보 갱신 완료. 병원 {}개", grouped.size());
     }
