@@ -1,4 +1,5 @@
 import HospitalItem from './HospitalItem'
+import HospitalDetailPanel from './HospitalDetailPanel'
 import LocationSearch from './LocationSearch'
 import TreatmentFilter from './TreatmentFilter'
 import styles from './HospitalPanel.module.css'
@@ -29,6 +30,9 @@ export default function HospitalPanel({
   selectedHospital,
   onSelect,
   onCloseDetail,
+  detail,
+  detailLoading,
+  detailError,
   onLocate,
   isCustom,
   customLabel,
@@ -42,10 +46,6 @@ export default function HospitalPanel({
   updateWindow,
   onUpdateWindowChange,
   lastFetchedAt,
-  expandedHospitalIds,
-  hospitalDetails,
-  detailLoadingById,
-  detailErrorById,
   children,
 }) {
   const filtered = hospitals.length !== totalCount
@@ -55,111 +55,110 @@ export default function HospitalPanel({
 
   return (
     <div className="finder-map-layout">
-      <aside className="finder-control-panel">
-        <div className={styles.panelHeader}>
-          <p className={styles.panelTitle}>내 주변 응급실</p>
-          {isCustom && customLabel && (
-            <p className={styles.customLocationLabel}>📍 {customLabel} 기준</p>
-          )}
-        </div>
-
-        <LocationSearch onLocate={onLocate} isCustom={isCustom} onResetToGps={onResetToGps} />
-
-        <div className={styles.searchMetaBox}>
-          <p className={styles.searchMetaTitle}>
-            {isCustom && customLabel ? `${customLabel} 기준` : '현재 위치 기준'}
-          </p>
-          <p className={styles.searchMetaText}>
-            반경 {radius}km · {countText} · 마지막 조회 {formatLastFetchedAt(lastFetchedAt)}
-          </p>
-        </div>
-
-        <div className={styles.sliderSection}>
-          <div className={styles.sliderHeader}>
-            <p className={styles.sliderLabel}>검색 반경</p>
-            <p className={styles.sliderValue}>{radius}km</p>
-          </div>
-          <div className={styles.radiusPresets}>
-            {RADIUS_PRESETS.map(km => (
-              <button
-                key={km}
-                type="button"
-                aria-pressed={radius === km}
-                onClick={() => onRadiusChange(km)}
-                className={`${styles.presetButton} ${radius === km ? styles.presetButtonActive : ''}`}
-              >
-                {km}km
-              </button>
-            ))}
-          </div>
-          <input
-            type="range"
-            min="1"
-            max="20"
-            step="1"
-            value={radius}
-            onChange={e => onRadiusChange(Number(e.target.value))}
-            aria-label="검색 반경 직접 설정"
-            className={styles.rangeInput}
-          />
-        </div>
-
-        <TreatmentFilter selected={selectedTreatments ?? []} onChange={onTreatmentsChange} />
-      </aside>
-
-      <main className="finder-map-pane">
+      {/* 지도는 항상 화면 전체를 채우는 배경 — 목록/상세 카드가 그 위에 뜬다(네이버·카카오맵 패턴). */}
+      <div className="finder-map-pane">
         {children}
-      </main>
+      </div>
 
-      <aside className="finder-results-panel">
-        <div className={styles.resultsHeader}>
-          <p className={styles.resultsTitle}>응급실 정보</p>
-          <p className={styles.resultsCount}>
-            {loading ? '검색 중...' : countText}
-          </p>
-        </div>
+      <aside className="finder-list-panel">
+        <div className={styles.listScrollArea}>
+          <div className={styles.panelHeader}>
+            <p className={styles.panelTitle}>내 주변 응급실</p>
+            {isCustom && customLabel && (
+              <p className={styles.customLocationLabel}>📍 {customLabel} 기준</p>
+            )}
+          </div>
 
-        <div className={styles.resultsControls}>
-          <div className={styles.sortSegment} role="group" aria-label="정렬">
-            {SORT_OPTIONS.map(opt => (
+          <LocationSearch onLocate={onLocate} isCustom={isCustom} onResetToGps={onResetToGps} />
+
+          <div className={styles.searchMetaBox}>
+            <p className={styles.searchMetaTitle}>
+              {isCustom && customLabel ? `${customLabel} 기준` : '현재 위치 기준'}
+            </p>
+            <p className={styles.searchMetaText}>
+              반경 {radius}km · {countText} · 마지막 조회 {formatLastFetchedAt(lastFetchedAt)}
+            </p>
+          </div>
+
+          <div className={styles.sliderSection}>
+            <div className={styles.sliderHeader}>
+              <p className={styles.sliderLabel}>검색 반경</p>
+              <p className={styles.sliderValue}>{radius}km</p>
+            </div>
+            <div className={styles.radiusPresets}>
+              {RADIUS_PRESETS.map(km => (
+                <button
+                  key={km}
+                  type="button"
+                  aria-pressed={radius === km}
+                  onClick={() => onRadiusChange(km)}
+                  className={`${styles.presetButton} ${radius === km ? styles.presetButtonActive : ''}`}
+                >
+                  {km}km
+                </button>
+              ))}
+            </div>
+            <input
+              type="range"
+              min="1"
+              max="20"
+              step="1"
+              value={radius}
+              onChange={e => onRadiusChange(Number(e.target.value))}
+              aria-label="검색 반경 직접 설정"
+              className={styles.rangeInput}
+            />
+          </div>
+
+          <TreatmentFilter selected={selectedTreatments ?? []} onChange={onTreatmentsChange} />
+
+          <div className={styles.resultsHeader}>
+            <p className={styles.resultsTitle}>응급실 정보</p>
+            <p className={styles.resultsCount}>
+              {loading ? '검색 중...' : countText}
+            </p>
+          </div>
+
+          <div className={styles.resultsControls}>
+            <div className={styles.sortSegment} role="group" aria-label="정렬">
+              {SORT_OPTIONS.map(opt => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  aria-pressed={sortBy === opt.value}
+                  onClick={() => onSortChange(opt.value)}
+                  className={`${styles.sortButton} ${sortBy === opt.value ? styles.sortButtonActive : ''}`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            <div className={styles.secondaryControls}>
               <button
-                key={opt.value}
                 type="button"
-                aria-pressed={sortBy === opt.value}
-                onClick={() => onSortChange(opt.value)}
-                className={`${styles.sortButton} ${sortBy === opt.value ? styles.sortButtonActive : ''}`}
+                aria-pressed={onlyAvailableBeds}
+                onClick={() => onOnlyAvailableBedsChange(!onlyAvailableBeds)}
+                className={`${styles.availabilityToggle} ${onlyAvailableBeds ? styles.availabilityToggleActive : ''}`}
               >
-                {opt.label}
+                🛏 가용 병상만
               </button>
-            ))}
+
+              <select
+                value={updateWindow}
+                onChange={e => onUpdateWindowChange(e.target.value)}
+                aria-label="최근 업데이트 기준"
+                className={styles.updateWindowSelect}
+              >
+                <option value="all">업데이트: 전체</option>
+                <option value="1">1시간 이내</option>
+                <option value="3">3시간 이내</option>
+                <option value="6">6시간 이내</option>
+                <option value="12">12시간 이내</option>
+              </select>
+            </div>
           </div>
 
-          <div className={styles.secondaryControls}>
-            <button
-              type="button"
-              aria-pressed={onlyAvailableBeds}
-              onClick={() => onOnlyAvailableBedsChange(!onlyAvailableBeds)}
-              className={`${styles.availabilityToggle} ${onlyAvailableBeds ? styles.availabilityToggleActive : ''}`}
-            >
-              🛏 가용 병상만
-            </button>
-
-            <select
-              value={updateWindow}
-              onChange={e => onUpdateWindowChange(e.target.value)}
-              aria-label="최근 업데이트 기준"
-              className={styles.updateWindowSelect}
-            >
-              <option value="all">업데이트: 전체</option>
-              <option value="1">1시간 이내</option>
-              <option value="3">3시간 이내</option>
-              <option value="6">6시간 이내</option>
-              <option value="12">12시간 이내</option>
-            </select>
-          </div>
-        </div>
-
-        <div className={styles.scrollableContent}>
           {loading ? (
             <div className={styles.emptyState}>
               불러오는 중...
@@ -182,18 +181,27 @@ export default function HospitalPanel({
                 key={h.id}
                 hospital={h}
                 isSelected={selectedHospital?.id === h.id}
-                isExpanded={expandedHospitalIds.includes(String(h.id))}
-                detail={hospitalDetails[String(h.id)]}
-                detailLoading={Boolean(detailLoadingById[String(h.id)])}
-                detailError={detailErrorById[String(h.id)]}
                 selectedTreatments={selectedTreatments ?? []}
                 onClick={() => onSelect(h)}
-                onCloseDetail={() => onCloseDetail(String(h.id))}
               />
             ))
           )}
         </div>
       </aside>
+
+      {/* 카카오맵처럼 목록 옆으로 가로로 열리는 상세 패널. 선택된 병원이 있을 때만 존재한다. */}
+      {selectedHospital && (
+        <aside className="finder-detail-panel">
+          <HospitalDetailPanel
+            hospital={detail ?? selectedHospital}
+            loading={detailLoading}
+            error={detailError}
+            selectedTreatments={selectedTreatments ?? []}
+            onClose={onCloseDetail}
+            embedded
+          />
+        </aside>
+      )}
     </div>
   )
 }
