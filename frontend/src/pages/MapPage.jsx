@@ -33,7 +33,7 @@ function getUpdatedTime(hospital) {
 }
 
 function hasAvailableBeds(hospital) {
-  return Number.isInteger(hospital.availableBeds) && hospital.availableBeds > 0
+  return !hospital.stale && Number.isInteger(hospital.availableBeds) && hospital.availableBeds > 0
 }
 
 function isUpdatedWithin(hospital, hours) {
@@ -47,8 +47,8 @@ function sortHospitals(hospitals, sortBy) {
   const sorted = [...hospitals]
   sorted.sort((a, b) => {
     if (sortBy === 'beds') {
-      const aBeds = Number.isInteger(a.availableBeds) ? a.availableBeds : -1
-      const bBeds = Number.isInteger(b.availableBeds) ? b.availableBeds : -1
+      const aBeds = !a.stale && Number.isInteger(a.availableBeds) ? a.availableBeds : -1
+      const bBeds = !b.stale && Number.isInteger(b.availableBeds) ? b.availableBeds : -1
       if (bBeds !== aBeds) return bBeds - aBeds
     }
 

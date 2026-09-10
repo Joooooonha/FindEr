@@ -300,7 +300,7 @@ npm run preview
 
 ## 6. 현재 진행 상황
 
-작성 기준일: 2026-06-09
+작성 기준일: 2026-09-10
 
 ### 완료된 것
 
@@ -310,31 +310,36 @@ npm run preview
   - `지도 중심에서 재검색` 버튼: 80m 이상 이탈 시 노출.
   - `현재 위치로` 버튼: 재조회 없이 지도 뷰만 검색 기준 위치로 복귀.
   - `recenterKey`로 KakaoMap 재중심 트리거 분리.
+- **응급카드 기능 제거** 완료. 프론트 라우트·컴포넌트와 백엔드 `com.finder.card` 패키지가 현재 트리에 없다.
+- **공공데이터 장애 대응** 반영 완료.
+  - E-Gen 인증/XML 오류와 정상 0건 응답 구분.
+  - 병상·중증질환 API 최대 3회 재시도.
+  - 중증질환 캐시가 비어 있을 때만 1분 주기로 재시도.
+  - 스케줄러 4스레드 분리와 실패 시 기존 캐시 유지.
+- **증상별 병원 필터** 반영 완료. `mkioskty` 코드를 증상 그룹으로 묶어 그룹 간 AND·그룹 내부 OR로 검색한다.
+- 외부 API client 파싱·재시도와 중증질환 스케줄러 테스트가 추가됐다.
 
 ### 진행 중
 
-- **응급카드 기능 제거** (`feature/remove-emergency-card`, PR #26):
-  - 프론트 페이지(`CardCreatePage`/`CardViewPage`/`CardEditPage`)·`CardForm`·`api/card.js`·`api/cardStorage.js` 삭제.
-  - `App.jsx` 라우트, `Header.jsx` 응급카드 버튼 제거.
-  - 백엔드 `com.finder.card` 패키지 전체 삭제.
-  - `common/config/AppConfig`의 `BCryptPasswordEncoder` bean, `build.gradle`의 `spring-security-crypto`, `application.properties`의 `app.base-url` 정리.
-  - README/architecture/api-spec/db-schema/CLAUDE.md 문서 갱신.
-  - 머지·배포 완료 후 EC2 MySQL에서 `DROP TABLE IF EXISTS emergency_card;` 수동 실행 필요 (Hibernate `ddl-auto=update`라 자동 drop 안 됨).
-    - 실행 전 체크리스트: (1) 대상 DB/스키마가 운영인지 재확인, (2) `mysqldump`로 해당 테이블 백업 스냅샷 확보, (3) 실행자·시각 기록, (4) 외래키/참조 영향 점검, (5) 백업으로부터의 롤백 SQL 준비.
-- **본 PR (AGENTS.md 메인화)**: 이 문서를 메인 컨텍스트로 승격, `CLAUDE.md`는 포인터로 축소.
+- 오래된 병상정보를 백엔드와 프론트엔드 양쪽에서 숨기는 방어 로직 보강.
+  - 30분 초과, 갱신 시각 없음, 음수 병상값은 `UNKNOWN`.
+  - 목록과 상세 응답의 병상 수는 `null`.
+  - 장비 정보는 E-Gen 기관 기본정보로 폴백.
+- 지원용 루트 README와 아키텍처·API 문서를 현재 구현에 맞게 갱신.
 
 ### 미해결/추적 항목
 
-- 백엔드 테스트가 거의 없다(`FindErApplicationTests`만 존재). 도메인 단위 테스트부터 채워야 한다.
+- `HospitalService`와 controller 계층의 행동 테스트가 부족하다.
+- 프론트엔드 자동 테스트가 없고 현재는 lint/build 정적 검증에 의존한다.
+- 배포 워크플로가 `./gradlew build -x test`를 사용하므로 PR 단계에서 테스트를 별도로 실행해야 한다.
 - `application.properties`에 `jpa.hibernate.ddl-auto=update`. 영속 엔티티가 0개라 사실상 무영향이지만, 운영 DB에 잔존 테이블이 남을 수 있어 머지 후 수동 확인.
 
 ### 다음 목표
 
-- 증상별 병원 정보 가시성 개선.
-  - 참고 서비스: `https://my-doctor.io/map/baby119`
-  - 목표: FindEr만의 특화 UX 정립. "왜 이 병원이 해당 증상에 적합한지"를 노출.
-- 백엔드 도메인/서비스 단위 테스트 보강.
-- E-Gen API 키 발급 전후 동작 안정성 점검.
+- 실제 사용자·응급실 이용 흐름을 조사해 제품이 해결할 수 있는 문제의 경계를 다시 검증.
+- "왜 이 병원이 해당 증상에 적합한지"를 코드값이 아닌 사용자 언어로 설명.
+- 백엔드 서비스/controller 테스트와 프론트엔드 테스트 보강.
+- 공개 가능한 데모 GIF와 화면 캡처 수집.
 
 ---
 
@@ -349,7 +354,7 @@ npm run preview
 
 데이터/의료 UX:
 
-- 병상 수와 갱신 시각은 의료 판단에 중요하므로 숨기지 않는다.
+- 유효한 병상 수와 갱신 시각은 의료 판단에 중요하므로 함께 제공한다. 유효하지 않은 병상 수는 아래 규칙에 따라 숨긴다.
 - `availableEmergencyBeds`가 음수이거나 갱신이 30분을 초과한 데이터는 `UNKNOWN` 처리한다.
 - `UNKNOWN` 상태에서는 병상 수 숫자를 숨기고 "정보 없음"으로 표시한다.
 - 오래된 데이터를 최신처럼 보이게 하지 않는다.

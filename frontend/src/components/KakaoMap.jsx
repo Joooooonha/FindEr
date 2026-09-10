@@ -8,6 +8,7 @@ const STATUS_COLORS = {
 }
 
 function getBedLabel(hospital) {
+  if (hospital.stale) return '?'
   if (!Number.isInteger(hospital.availableBeds) || hospital.availableBeds < 0) return '?'
   return String(hospital.availableBeds)
 }

@@ -5,6 +5,8 @@ import com.finder.hospital.domain.BlockMessage;
 import com.finder.hospital.domain.HospitalInfo;
 import com.finder.hospital.domain.HospitalStatus;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Set;
 
@@ -32,6 +34,8 @@ public record HospitalDetailResponse(
         List<BlockMessageResponse> blockMessages,
         List<String> availableTreatments
 ) {
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+
     public static HospitalDetailResponse from(
             HospitalInfo info,
             BedSnapshot bed,
@@ -39,9 +43,11 @@ public record HospitalDetailResponse(
             List<BlockMessage> activeBlockMessages,
             Set<String> availableTreatmentCodes
     ) {
-        HospitalStatus status = bed != null ? bed.toStatus(staleThresholdMinutes) : HospitalStatus.UNKNOWN;
-        Integer beds = bed != null ? bed.availableEmergencyBeds() : null;
-        boolean stale = bed == null || bed.isStale(staleThresholdMinutes, java.time.LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now(KST);
+        boolean stale = bed == null || bed.isStale(staleThresholdMinutes, now);
+        HospitalStatus status = bed != null ? bed.toStatus(staleThresholdMinutes, now) : HospitalStatus.UNKNOWN;
+        boolean usableBedData = bed != null && !stale && status != HospitalStatus.UNKNOWN;
+        Integer beds = usableBedData ? bed.availableEmergencyBeds() : null;
         String updatedAt = bed != null && bed.updatedAt() != null ? bed.updatedAt().toString() : null;
         return new HospitalDetailResponse(
                 info.id(),
@@ -50,15 +56,17 @@ public record HospitalDetailResponse(
                 info.phone(),
                 status,
                 beds,
-                bed != null ? bed.operatingRooms() : null,
-                bed != null ? bed.generalWardBeds() : null,
-                bed != null ? bed.generalIcuBeds() : null,
-                bed != null ? bed.neuroIcuBeds() : null,
-                bed != null ? bed.emergencyIcuBeds() : null,
-                bed != null && bed.operatingRooms() != null ? bed.operatingRooms() > 0 : info.surgeryAvailable(),
-                bed != null ? bed.ctAvailable() : info.ctAvailable(),
-                bed != null ? bed.mriAvailable() : info.mriAvailable(),
-                bed != null ? bed.ventilatorAvailable() : info.ventilatorAvailable(),
+                usableBedData ? bed.operatingRooms() : null,
+                usableBedData ? bed.generalWardBeds() : null,
+                usableBedData ? bed.generalIcuBeds() : null,
+                usableBedData ? bed.neuroIcuBeds() : null,
+                usableBedData ? bed.emergencyIcuBeds() : null,
+                usableBedData && bed.operatingRooms() != null
+                        ? bed.operatingRooms() > 0
+                        : info.surgeryAvailable(),
+                usableBedData ? bed.ctAvailable() : info.ctAvailable(),
+                usableBedData ? bed.mriAvailable() : info.mriAvailable(),
+                usableBedData ? bed.ventilatorAvailable() : info.ventilatorAvailable(),
                 stale,
                 updatedAt,
                 info.lat(),
