@@ -1,5 +1,4 @@
 import { BED_UPDATE_HELP } from '../constants/hospitalConstants'
-import HospitalDetailPanel from './HospitalDetailPanel'
 import StatusBadge from './StatusBadge'
 import { getMatchedGroups } from './TreatmentFilter'
 
@@ -26,13 +25,8 @@ function toRelativeTime(isoString) {
 export default function HospitalItem({
   hospital,
   isSelected,
-  isExpanded,
-  detail,
-  detailLoading,
-  detailError,
   selectedTreatments = [],
   onClick,
-  onCloseDetail,
 }) {
   const hasCoords = Number.isFinite(hospital.lat) && Number.isFinite(hospital.lng)
   const showBeds = !hospital.stale && Number.isInteger(hospital.availableBeds) && hospital.availableBeds >= 0
@@ -163,19 +157,6 @@ export default function HospitalItem({
           </a>
         )}
       </div>
-
-      {isExpanded && (
-        <div onClick={e => e.stopPropagation()}>
-          <HospitalDetailPanel
-            hospital={detail ?? hospital}
-            loading={detailLoading}
-            error={detailError}
-            selectedTreatments={selectedTreatments}
-            onClose={onCloseDetail}
-            embedded
-          />
-        </div>
-      )}
     </div>
   )
 }

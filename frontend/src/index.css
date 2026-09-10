@@ -72,41 +72,50 @@ input {
   box-sizing: border-box;
 }
 
+/* 네이버/카카오맵 패턴: 지도는 항상 전체 화면을 채우는 배경이고,
+   목록·상세 패널은 그 위에 뜨는 카드다. 그리드로 3열을 나눠 지도
+   박스 자체의 크기를 바꾸면 Kakao Maps가 컨테이너 리사이즈를 감지
+   못해(relayout 미호출) 타일이 깨진다 — 그래서 지도는 항상
+   position:absolute; inset:0 로 고정 크기를 유지하고, 패널만 그
+   위에서 여닫히게 한다. */
 .finder-map-layout {
-  display: grid;
-  grid-template-columns: 360px minmax(420px, 1fr) 420px;
+  position: relative;
   height: 100%;
   min-height: 0;
   overflow: hidden;
   background: #f8fafc;
 }
 
-.finder-control-panel,
-.finder-results-panel {
-  height: 100%;
-  min-height: 0;
-  min-width: 0;
+.finder-map-pane {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.finder-list-panel,
+.finder-detail-panel {
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
   display: flex;
   flex-direction: column;
   background: #fff;
-  z-index: 10;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.16);
 }
 
-.finder-control-panel {
-  border-right: 1px solid #e5e7eb;
-  /* 필터가 늘어나면(예: "그 외 증상" 펼침) 뷰포트가 짧을 때 내용이
-     잘려서 닿을 수 없었다 — 결과 패널처럼 자체 스크롤을 갖게 한다. */
+.finder-list-panel {
+  left: 12px;
+  width: 380px;
+  z-index: 20;
+  overflow: hidden;
+}
+
+.finder-detail-panel {
+  left: 404px;
+  width: 380px;
+  z-index: 15;
   overflow-y: auto;
-}
-
-.finder-results-panel {
-  border-left: 1px solid #e5e7eb;
-}
-
-.finder-map-pane {
-  min-width: 0;
-  min-height: 0;
-  position: relative;
 }
 
 .map-center-search-marker {
@@ -218,44 +227,58 @@ input {
 }
 
 @media (max-width: 1180px) {
-  .finder-map-layout {
-    grid-template-columns: 320px minmax(360px, 1fr) 360px;
+  .finder-list-panel,
+  .finder-detail-panel {
+    width: 320px;
   }
 
-  .finder-map-pane {
-    min-width: 360px;
+  .finder-detail-panel {
+    left: 344px;
   }
 }
 
 @media (max-width: 900px) {
+  /* 380px 고정폭 카드가 뜨는 패턴은 좁은 화면에서 성립하지 않는다.
+     지도는 배경으로 남기되, 목록/상세는 화면을 가득 채우는 시트로
+     바꾸고 DOM 순서(목록→상세→지도)대로 세로로 쌓는다. */
   .finder-map-layout {
-    grid-template-columns: 1fr;
-    /* DOM 순서(필터→지도→목록)를 그대로 세로로 접으면 정작 필요한
-       병원 목록이 필터 전체 + 지도 절반 아래로 밀린다. order로 시각
-       순서만 목록→지도→필터로 바꾸고, 트랙 크기도 그에 맞춘다. */
-    grid-template-rows: minmax(360px, 1fr) minmax(280px, 42vh) auto;
+    display: flex;
+    flex-direction: column;
     overflow: auto;
   }
 
-  .finder-results-panel {
+  .finder-list-panel,
+  .finder-detail-panel {
+    position: relative;
+    inset: auto;
+    top: auto;
+    left: auto;
+    bottom: auto;
+    width: auto;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .finder-list-panel {
     order: 1;
+    flex: 1 1 auto;
+    min-height: 320px;
   }
 
-  .finder-map-pane {
+  .finder-detail-panel {
     order: 2;
-  }
-
-  .finder-control-panel {
-    order: 3;
-  }
-
-  .finder-control-panel,
-  .finder-results-panel {
-    height: auto;
-    border-inline: none;
+    /* flex-shrink 기본값(1)이면 목록(min 320px)·지도(42vh)가 자리를
+       차지한 뒤 남는 높이까지 찌그러져 max-height가 무의미해진다.
+       (812px 뷰포트 기준 105px까지 눌림) 축소를 막아 내용 높이대로
+       펴고, 넘치는 만큼은 .finder-map-layout의 overflow:auto가 받는다. */
+    flex-shrink: 0;
+    max-height: 60vh;
   }
 
   .finder-map-pane {
+    position: relative;
+    order: 3;
+    flex: 0 0 42vh;
     min-height: 280px;
   }
 
