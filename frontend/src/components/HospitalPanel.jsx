@@ -3,6 +3,13 @@ import LocationSearch from './LocationSearch'
 import TreatmentFilter from './TreatmentFilter'
 import styles from './HospitalPanel.module.css'
 
+const RADIUS_PRESETS = [3, 5, 10, 20]
+const SORT_OPTIONS = [
+  { value: 'distance', label: '거리순' },
+  { value: 'beds', label: '병상 많은 순' },
+  { value: 'updated', label: '최신순' },
+]
+
 function formatLastFetchedAt(value) {
   if (!value) return '아직 조회 전'
   return value.toLocaleTimeString('ko-KR', {
@@ -15,6 +22,8 @@ export default function HospitalPanel({
   hospitals,
   totalCount,
   loading,
+  fetchError,
+  onRetryFetch,
   radius,
   onRadiusChange,
   selectedHospital,
@@ -70,6 +79,19 @@ export default function HospitalPanel({
             <p className={styles.sliderLabel}>검색 반경</p>
             <p className={styles.sliderValue}>{radius}km</p>
           </div>
+          <div className={styles.radiusPresets}>
+            {RADIUS_PRESETS.map(km => (
+              <button
+                key={km}
+                type="button"
+                aria-pressed={radius === km}
+                onClick={() => onRadiusChange(km)}
+                className={`${styles.presetButton} ${radius === km ? styles.presetButtonActive : ''}`}
+              >
+                {km}km
+              </button>
+            ))}
+          </div>
           <input
             type="range"
             min="1"
@@ -77,13 +99,9 @@ export default function HospitalPanel({
             step="1"
             value={radius}
             onChange={e => onRadiusChange(Number(e.target.value))}
-            aria-label="검색 반경"
+            aria-label="검색 반경 직접 설정"
             className={styles.rangeInput}
           />
-          <div className={styles.rangeLimits}>
-            <span>1km</span>
-            <span>20km</span>
-          </div>
         </div>
 
         <TreatmentFilter selected={selectedTreatments ?? []} onChange={onTreatmentsChange} />
@@ -102,48 +120,57 @@ export default function HospitalPanel({
         </div>
 
         <div className={styles.resultsControls}>
-          <label className={styles.controlField}>
-            <span className={styles.controlLabel}>정렬</span>
-            <select
-              value={sortBy}
-              onChange={e => onSortChange(e.target.value)}
-              className={styles.selectControl}
-            >
-              <option value="distance">거리순</option>
-              <option value="beds">병상 많은 순</option>
-              <option value="updated">업데이트 최신순</option>
-            </select>
-          </label>
+          <div className={styles.sortSegment} role="group" aria-label="정렬">
+            {SORT_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                type="button"
+                aria-pressed={sortBy === opt.value}
+                onClick={() => onSortChange(opt.value)}
+                className={`${styles.sortButton} ${sortBy === opt.value ? styles.sortButtonActive : ''}`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
 
-          <label className={styles.controlField}>
-            <span className={styles.controlLabel}>최근 업데이트</span>
+          <div className={styles.secondaryControls}>
+            <button
+              type="button"
+              aria-pressed={onlyAvailableBeds}
+              onClick={() => onOnlyAvailableBedsChange(!onlyAvailableBeds)}
+              className={`${styles.availabilityToggle} ${onlyAvailableBeds ? styles.availabilityToggleActive : ''}`}
+            >
+              🛏 가용 병상만
+            </button>
+
             <select
               value={updateWindow}
               onChange={e => onUpdateWindowChange(e.target.value)}
-              className={styles.selectControl}
+              aria-label="최근 업데이트 기준"
+              className={styles.updateWindowSelect}
             >
-              <option value="all">전체</option>
+              <option value="all">업데이트: 전체</option>
               <option value="1">1시간 이내</option>
               <option value="3">3시간 이내</option>
               <option value="6">6시간 이내</option>
               <option value="12">12시간 이내</option>
             </select>
-          </label>
-
-          <label className={styles.checkboxControl}>
-            <input
-              type="checkbox"
-              checked={onlyAvailableBeds}
-              onChange={e => onOnlyAvailableBedsChange(e.target.checked)}
-            />
-            <span>가용 병상 있음</span>
-          </label>
+          </div>
         </div>
 
         <div className={styles.scrollableContent}>
           {loading ? (
             <div className={styles.emptyState}>
               불러오는 중...
+            </div>
+          ) : fetchError ? (
+            <div className={styles.errorState}>
+              <p className={styles.errorStateMessage}>응급실 정보를 불러오지 못했습니다.</p>
+              <p className={styles.errorStateHint}>네트워크 상태를 확인한 뒤 다시 시도해 주세요.</p>
+              <button type="button" className={styles.retryButton} onClick={onRetryFetch}>
+                다시 시도
+              </button>
             </div>
           ) : hospitals.length === 0 ? (
             <div className={styles.emptyState}>
@@ -159,6 +186,7 @@ export default function HospitalPanel({
                 detail={hospitalDetails[String(h.id)]}
                 detailLoading={Boolean(detailLoadingById[String(h.id)])}
                 detailError={detailErrorById[String(h.id)]}
+                selectedTreatments={selectedTreatments ?? []}
                 onClick={() => onSelect(h)}
                 onCloseDetail={() => onCloseDetail(String(h.id))}
               />

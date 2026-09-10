@@ -1,6 +1,7 @@
 import { BED_UPDATE_HELP } from '../constants/hospitalConstants'
 import HelpBadge from './HelpBadge'
 import StatusBadge from './StatusBadge'
+import { getMatchedGroups } from './TreatmentFilter'
 
 const BED_ROWS = [
   { key: 'availableBeds', label: '응급실 병상' },
@@ -45,8 +46,12 @@ function AvailabilityValue({ value }) {
   )
 }
 
-export default function HospitalDetailPanel({ hospital, loading, error, onClose, embedded = false }) {
+export default function HospitalDetailPanel({ hospital, loading, error, selectedTreatments = [], onClose, embedded = false }) {
   if (!hospital && !loading) return null
+
+  const matchedActiveGroups = selectedTreatments.length > 0
+    ? getMatchedGroups(hospital?.availableTreatments).filter(g => selectedTreatments.includes(g.id))
+    : []
 
   return (
     <section style={{
@@ -105,14 +110,54 @@ export default function HospitalDetailPanel({ hospital, loading, error, onClose,
             <HelpBadge label={BED_UPDATE_HELP} />
           </div>
 
+          {matchedActiveGroups.length > 0 && (
+            <div style={{ marginTop: '10px', display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+              {matchedActiveGroups.map(group => (
+                <span
+                  key={group.id}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '3px',
+                    padding: '3px 9px',
+                    borderRadius: '10px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    background: '#dcfce7',
+                    color: '#166534',
+                  }}
+                >
+                  ✓ {group.label} 처치 가능
+                </span>
+              ))}
+            </div>
+          )}
+
           <div style={{ marginTop: '12px', fontSize: '13px', color: '#4b5563', lineHeight: 1.5 }}>
             <p>{hospital.address}</p>
-            {hospital.phone && (
-              <a href={`tel:${hospital.phone}`} style={{ color: '#2563eb', textDecoration: 'none' }}>
-                {hospital.phone}
-              </a>
-            )}
           </div>
+
+          {hospital.phone && (
+            <a
+              href={`tel:${hospital.phone}`}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                marginTop: '10px',
+                padding: '10px 14px',
+                borderRadius: '8px',
+                background: '#2563eb',
+                color: '#fff',
+                fontSize: '14px',
+                fontWeight: 700,
+                textDecoration: 'none',
+              }}
+            >
+              📞 {hospital.phone}
+            </a>
+          )}
 
           <div style={{ marginTop: '14px' }}>
             <h3 style={{ fontSize: '13px', color: '#111827', marginBottom: '8px' }}>병상 현황</h3>
