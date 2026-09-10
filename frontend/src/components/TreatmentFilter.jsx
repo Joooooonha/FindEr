@@ -25,6 +25,13 @@ export function matchesAllGroups(hospitalCodes, selectedGroupIds) {
   })
 }
 
+/** 병원이 실제로 지원하는 증상 그룹 목록을 반환한다. 카드/상세에서 매칭 근거를 보여주는 데 쓴다. */
+export function getMatchedGroups(hospitalCodes) {
+  if (!hospitalCodes || hospitalCodes.length === 0) return []
+  const set = new Set(hospitalCodes)
+  return TREATMENT_GROUPS.filter(group => group.codes.some(code => set.has(code)))
+}
+
 export default function TreatmentFilter({ selected, onChange }) {
   const toggle = (id) => {
     onChange(selected.includes(id) ? selected.filter(s => s !== id) : [...selected, id])

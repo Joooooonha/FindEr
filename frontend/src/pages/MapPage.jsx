@@ -82,6 +82,7 @@ export default function MapPage() {
   const [refreshKey, setRefreshKey] = useState(0)
   const [recenterKey, setRecenterKey] = useState(0)
   const [lastFetchedAt, setLastFetchedAt] = useState(null)
+  const [fetchError, setFetchError] = useState(false)
 
   const userLocation = customLocation ?? gpsLocation
   const mapMovedFromSearchLocation = useMemo(
@@ -113,10 +114,14 @@ export default function MapPage() {
         if (cancelled) return
         setHospitals(data.hospitals || [])
         setLastFetchedAt(new Date())
+        setFetchError(false)
       })
       .catch(() => {
         if (cancelled) return
+        // 조회 실패는 '주변에 응급실 없음'과 다른 상태다: 목록은 비우되
+        // fetchError 플래그로 구분해 재시도 UI를 보여줄 수 있게 한다.
         setHospitals([])
+        setFetchError(true)
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -126,6 +131,8 @@ export default function MapPage() {
       cancelled = true
     }
   }, [userLocation, radius, refreshKey])
+
+  const handleRetryFetch = () => setRefreshKey(key => key + 1)
 
   useEffect(() => {
     if (!userLocation) return
@@ -231,6 +238,8 @@ export default function MapPage() {
       hospitals={visibleHospitals}
       totalCount={hospitals.length}
       loading={loading}
+      fetchError={fetchError}
+      onRetryFetch={handleRetryFetch}
       radius={radius}
       onRadiusChange={setRadius}
       selectedHospital={selectedHospital}

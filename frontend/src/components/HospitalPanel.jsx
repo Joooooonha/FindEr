@@ -15,6 +15,8 @@ export default function HospitalPanel({
   hospitals,
   totalCount,
   loading,
+  fetchError,
+  onRetryFetch,
   radius,
   onRadiusChange,
   selectedHospital,
@@ -145,6 +147,14 @@ export default function HospitalPanel({
             <div className={styles.emptyState}>
               불러오는 중...
             </div>
+          ) : fetchError ? (
+            <div className={styles.errorState}>
+              <p className={styles.errorStateMessage}>응급실 정보를 불러오지 못했습니다.</p>
+              <p className={styles.errorStateHint}>네트워크 상태를 확인한 뒤 다시 시도해 주세요.</p>
+              <button type="button" className={styles.retryButton} onClick={onRetryFetch}>
+                다시 시도
+              </button>
+            </div>
           ) : hospitals.length === 0 ? (
             <div className={styles.emptyState}>
               {filtered ? '선택한 조건에 맞는 응급실이 없습니다' : '주변 응급실이 없습니다'}
@@ -159,6 +169,7 @@ export default function HospitalPanel({
                 detail={hospitalDetails[String(h.id)]}
                 detailLoading={Boolean(detailLoadingById[String(h.id)])}
                 detailError={detailErrorById[String(h.id)]}
+                selectedTreatments={selectedTreatments ?? []}
                 onClick={() => onSelect(h)}
                 onCloseDetail={() => onCloseDetail(String(h.id))}
               />

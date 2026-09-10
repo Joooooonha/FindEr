@@ -130,6 +130,39 @@
   color: #9ca3af;
 }
 
+.errorState {
+  padding: 40px 18px;
+  text-align: center;
+}
+
+.errorStateMessage {
+  font-size: 14px;
+  font-weight: 600;
+  color: #991b1b;
+}
+
+.errorStateHint {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.retryButton {
+  margin-top: 14px;
+  padding: 8px 20px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.retryButton:hover {
+  background: #fee2e2;
+}
+
 .searchMetaBox {
   padding: 12px 16px;
   border-bottom: 1px solid #e5e7eb;

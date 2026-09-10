@@ -1,6 +1,7 @@
 import { BED_UPDATE_HELP } from '../constants/hospitalConstants'
 import HospitalDetailPanel from './HospitalDetailPanel'
 import StatusBadge from './StatusBadge'
+import { getMatchedGroups } from './TreatmentFilter'
 
 /** 카카오맵 길찾기 URL 생성. 한글 이름 안전을 위해 encodeURIComponent 처리. */
 function buildKakaoDirectionsUrl(hospital) {
@@ -29,12 +30,17 @@ export default function HospitalItem({
   detail,
   detailLoading,
   detailError,
+  selectedTreatments = [],
   onClick,
   onCloseDetail,
 }) {
   const hasCoords = Number.isFinite(hospital.lat) && Number.isFinite(hospital.lng)
   const showBeds = Number.isInteger(hospital.availableBeds) && hospital.availableBeds >= 0
   const relativeTime = toRelativeTime(hospital.updatedAt)
+  // 선택된 증상 필터 중 이 병원이 실제로 처치 가능한 항목만 추려, 매칭 근거를 카드에 바로 노출한다.
+  const matchedActiveGroups = selectedTreatments.length > 0
+    ? getMatchedGroups(hospital.availableTreatments).filter(g => selectedTreatments.includes(g.id))
+    : []
 
   return (
     <div
@@ -59,6 +65,29 @@ export default function HospitalItem({
         </div>
         <StatusBadge status={hospital.status} />
       </div>
+
+      {matchedActiveGroups.length > 0 && (
+        <div style={{ display: 'flex', gap: '4px', marginTop: '6px', flexWrap: 'wrap' }}>
+          {matchedActiveGroups.map(group => (
+            <span
+              key={group.id}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '3px',
+                padding: '2px 8px',
+                borderRadius: '10px',
+                fontSize: '11px',
+                fontWeight: 600,
+                background: '#dcfce7',
+                color: '#166534',
+              }}
+            >
+              ✓ {group.label} 처치 가능
+            </span>
+          ))}
+        </div>
+      )}
 
       <div style={{ display: 'flex', gap: '6px', marginTop: '6px', fontSize: '12px', color: '#6b7280', flexWrap: 'wrap' }}>
         {showBeds ? (
@@ -113,6 +142,7 @@ export default function HospitalItem({
             hospital={detail ?? hospital}
             loading={detailLoading}
             error={detailError}
+            selectedTreatments={selectedTreatments}
             onClose={onCloseDetail}
             embedded
           />
