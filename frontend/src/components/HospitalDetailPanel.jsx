@@ -135,12 +135,29 @@ export default function HospitalDetailPanel({ hospital, loading, error, selected
 
           <div style={{ marginTop: '12px', fontSize: '13px', color: '#4b5563', lineHeight: 1.5 }}>
             <p>{hospital.address}</p>
-            {hospital.phone && (
-              <a href={`tel:${hospital.phone}`} style={{ color: '#2563eb', textDecoration: 'none' }}>
-                {hospital.phone}
-              </a>
-            )}
           </div>
+
+          {hospital.phone && (
+            <a
+              href={`tel:${hospital.phone}`}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                marginTop: '10px',
+                padding: '10px 14px',
+                borderRadius: '8px',
+                background: '#2563eb',
+                color: '#fff',
+                fontSize: '14px',
+                fontWeight: 700,
+                textDecoration: 'none',
+              }}
+            >
+              📞 {hospital.phone}
+            </a>
+          )}
 
           <div style={{ marginTop: '14px' }}>
             <h3 style={{ fontSize: '13px', color: '#111827', marginBottom: '8px' }}>병상 현황</h3>

@@ -113,12 +113,26 @@ export default function HospitalItem({
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '12px', marginTop: '8px', alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: '8px', marginTop: '10px', alignItems: 'stretch' }}>
         {hospital.phone && (
           <a
             href={`tel:${hospital.phone}`}
             onClick={e => e.stopPropagation()}
-            style={{ fontSize: '12px', color: '#3b82f6', textDecoration: 'none' }}
+            style={{
+              flex: hasCoords ? '1 1 auto' : '0 0 auto',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '10px 14px',
+              borderRadius: '8px',
+              background: '#2563eb',
+              color: '#fff',
+              fontSize: '14px',
+              fontWeight: 700,
+              textDecoration: 'none',
+              whiteSpace: 'nowrap',
+            }}
           >
             📞 {hospital.phone}
           </a>
@@ -129,7 +143,21 @@ export default function HospitalItem({
             target="_blank"
             rel="noopener noreferrer"
             onClick={e => e.stopPropagation()}
-            style={{ fontSize: '12px', color: '#3b82f6', textDecoration: 'none' }}
+            style={{
+              flex: '0 0 auto',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '10px 14px',
+              borderRadius: '8px',
+              border: '1px solid #d1d5db',
+              color: '#374151',
+              fontSize: '13px',
+              fontWeight: 600,
+              textDecoration: 'none',
+              whiteSpace: 'nowrap',
+            }}
           >
             🧭 길찾기
           </a>

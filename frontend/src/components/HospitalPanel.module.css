@@ -38,6 +38,30 @@
   color: #3b82f6;
 }
 
+.radiusPresets {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.presetButton {
+  flex: 1;
+  padding: 5px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.presetButtonActive {
+  color: #fff;
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+
 .rangeInput {
   width: 100%;
   accent-color: #3b82f6;

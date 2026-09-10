@@ -3,6 +3,8 @@ import LocationSearch from './LocationSearch'
 import TreatmentFilter from './TreatmentFilter'
 import styles from './HospitalPanel.module.css'
 
+const RADIUS_PRESETS = [3, 5, 10, 20]
+
 function formatLastFetchedAt(value) {
   if (!value) return '아직 조회 전'
   return value.toLocaleTimeString('ko-KR', {
@@ -71,6 +73,19 @@ export default function HospitalPanel({
           <div className={styles.sliderHeader}>
             <p className={styles.sliderLabel}>검색 반경</p>
             <p className={styles.sliderValue}>{radius}km</p>
+          </div>
+          <div className={styles.radiusPresets}>
+            {RADIUS_PRESETS.map(km => (
+              <button
+                key={km}
+                type="button"
+                aria-pressed={radius === km}
+                onClick={() => onRadiusChange(km)}
+                className={`${styles.presetButton} ${radius === km ? styles.presetButtonActive : ''}`}
+              >
+                {km}km
+              </button>
+            ))}
           </div>
           <input
             type="range"
