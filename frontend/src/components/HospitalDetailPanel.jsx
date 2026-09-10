@@ -120,7 +120,7 @@ export default function HospitalDetailPanel({ hospital, loading, error, onClose,
               {BED_ROWS.map(row => (
                 <div key={row.key} style={{ padding: '8px', background: '#f9fafb', borderRadius: '6px' }}>
                   <p style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px' }}>{row.label}</p>
-                  <CapacityValue value={hospital[row.key]} />
+                  <CapacityValue value={hospital.stale ? null : hospital[row.key]} />
                 </div>
               ))}
             </div>

@@ -33,7 +33,7 @@ export default function HospitalItem({
   onCloseDetail,
 }) {
   const hasCoords = Number.isFinite(hospital.lat) && Number.isFinite(hospital.lng)
-  const showBeds = Number.isInteger(hospital.availableBeds) && hospital.availableBeds >= 0
+  const showBeds = !hospital.stale && Number.isInteger(hospital.availableBeds) && hospital.availableBeds >= 0
   const relativeTime = toRelativeTime(hospital.updatedAt)
 
   return (

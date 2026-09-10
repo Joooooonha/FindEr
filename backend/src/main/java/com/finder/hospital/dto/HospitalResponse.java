@@ -5,6 +5,8 @@ import com.finder.hospital.domain.BlockMessage;
 import com.finder.hospital.domain.HospitalInfo;
 import com.finder.hospital.domain.HospitalStatus;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Set;
 
@@ -24,6 +26,8 @@ public record HospitalResponse(
         List<BlockMessageResponse> blockMessages,
         List<String> availableTreatments
 ) {
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+
     public static HospitalResponse of(
             HospitalInfo info,
             double distance,
@@ -32,9 +36,10 @@ public record HospitalResponse(
             List<BlockMessage> activeBlockMessages,
             Set<String> availableTreatmentCodes
     ) {
-        HospitalStatus status = bed != null ? bed.toStatus(staleThresholdMinutes) : HospitalStatus.UNKNOWN;
-        Integer beds = bed != null ? bed.availableEmergencyBeds() : null;
-        boolean stale = bed == null || bed.isStale(staleThresholdMinutes, java.time.LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now(KST);
+        boolean stale = bed == null || bed.isStale(staleThresholdMinutes, now);
+        HospitalStatus status = bed != null ? bed.toStatus(staleThresholdMinutes, now) : HospitalStatus.UNKNOWN;
+        Integer beds = status != HospitalStatus.UNKNOWN ? bed.availableEmergencyBeds() : null;
         String updatedAt = bed != null && bed.updatedAt() != null ? bed.updatedAt().toString() : null;
         return new HospitalResponse(
                 info.id(),
