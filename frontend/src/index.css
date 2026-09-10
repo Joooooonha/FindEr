@@ -267,6 +267,11 @@ input {
 
   .finder-detail-panel {
     order: 2;
+    /* flex-shrink 기본값(1)이면 목록(min 320px)·지도(42vh)가 자리를
+       차지한 뒤 남는 높이까지 찌그러져 max-height가 무의미해진다.
+       (812px 뷰포트 기준 105px까지 눌림) 축소를 막아 내용 높이대로
+       펴고, 넘치는 만큼은 .finder-map-layout의 overflow:auto가 받는다. */
+    flex-shrink: 0;
     max-height: 60vh;
   }
 
