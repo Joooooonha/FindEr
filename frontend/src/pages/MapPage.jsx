@@ -71,7 +71,6 @@ export default function MapPage() {
   const [radius, setRadius] = useState(5)
   const [selectedTreatments, setSelectedTreatments] = useState([])
   const [selectedHospital, setSelectedHospital] = useState(null)
-  const [expandedHospitalIds, setExpandedHospitalIds] = useState([])
   const [hospitalDetails, setHospitalDetails] = useState({})
   const [detailLoadingById, setDetailLoadingById] = useState({})
   const [detailErrorById, setDetailErrorById] = useState({})
@@ -137,7 +136,6 @@ export default function MapPage() {
   useEffect(() => {
     if (!userLocation) return
     setSelectedHospital(null)
-    setExpandedHospitalIds([])
     setHospitalDetails({})
     setDetailLoadingById({})
     setDetailErrorById({})
@@ -186,19 +184,20 @@ export default function MapPage() {
       })
   }
 
+  // 카드를 누르면 옆에 상세 패널이 가로로 열린다(카카오맵 패턴). 같은
+  // 병원을 다시 누르면 닫는다.
   const handleHospitalSelect = (hospital) => {
-    const id = String(hospital.id)
-    const alreadyExpanded = expandedHospitalIds.includes(id)
+    const alreadySelected = selectedHospital?.id === hospital.id
+    if (alreadySelected) {
+      setSelectedHospital(null)
+      return
+    }
     setSelectedHospital(hospital)
-    setExpandedHospitalIds(prev => (
-      alreadyExpanded ? prev.filter(expandedId => expandedId !== id) : [...prev, id]
-    ))
-    if (!alreadyExpanded) loadHospitalDetail(id)
+    loadHospitalDetail(String(hospital.id))
   }
 
-  const handleCloseHospitalDetail = (hospitalId) => {
-    const id = String(hospitalId)
-    setExpandedHospitalIds(prev => prev.filter(expandedId => expandedId !== id))
+  const handleCloseHospitalDetail = () => {
+    setSelectedHospital(null)
   }
 
   const handleSearchCurrentLocation = () => {
@@ -211,7 +210,6 @@ export default function MapPage() {
       })
     }
     setSelectedHospital(null)
-    setExpandedHospitalIds([])
     setHospitalDetails({})
     setDetailLoadingById({})
     setDetailErrorById({})
@@ -233,6 +231,8 @@ export default function MapPage() {
     )
   }
 
+  const selectedId = selectedHospital ? String(selectedHospital.id) : null
+
   return (
     <HospitalPanel
       hospitals={visibleHospitals}
@@ -245,6 +245,9 @@ export default function MapPage() {
       selectedHospital={selectedHospital}
       onSelect={handleHospitalSelect}
       onCloseDetail={handleCloseHospitalDetail}
+      detail={selectedId ? hospitalDetails[selectedId] : undefined}
+      detailLoading={selectedId ? Boolean(detailLoadingById[selectedId]) : false}
+      detailError={selectedId ? detailErrorById[selectedId] : null}
       onLocate={setCustomLocation}
       isCustom={Boolean(customLocation)}
       customLabel={customLocation?.label}
@@ -258,10 +261,6 @@ export default function MapPage() {
       updateWindow={updateWindow}
       onUpdateWindowChange={setUpdateWindow}
       lastFetchedAt={lastFetchedAt}
-      expandedHospitalIds={expandedHospitalIds}
-      hospitalDetails={hospitalDetails}
-      detailLoadingById={detailLoadingById}
-      detailErrorById={detailErrorById}
     >
       <>
         <KakaoMap
